@@ -1,0 +1,410 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="reveal/css/reveal.css">
+    <link rel="stylesheet" href="reveal/css/theme/kontur-light.css" id="theme">
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="reveal/css/highlight/idea-for-light.css">
+    <link rel="stylesheet" href="reveal/css/highlight/darkula-for-dark.css">
+    <!--[if lt IE 9]>
+    <script src="reveal/js/html5shiv.js"></script>
+    <![endif]-->
+    <script defer src="reveal/js/head.min.js"></script>
+    <script defer src="reveal/js/reveal.js"></script>
+    <script defer src="reveal/initialize.js"></script>
+    <script defer src="reveal/js/d3.min.js"></script>
+
+    <style>
+        .slides .center {
+	          text-align: center;
+        }
+
+        .slides .right {
+	          text-align: right;
+        }
+    </style>
+
+    <title>Web API</title>
+</head>
+<body>
+
+<div class="reveal"><div class="slides">
+
+<section data-markdown><script type="text/template">
+
+# Web API Practice
+
+<p class="center"><a href="https://github.com/kontur-courses/web-game">https://github.com/kontur-courses/<b>web-game</b></a></p>
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Web API на .NET Core
+
+***
+
+### Создание Web API на .NET Core
+
+```bash
+dotnet new webapi -n WeatherApi
+```
+
+***
+
+### Program.cs
+```cs
+public class Program
+{
+	public static void Main(string[] args)
+	{
+		CreateHostBuilder(args).Build().Run();
+	}
+
+	public static IHostBuilder CreateHostBuilder(string[] args) =>
+		Host.CreateDefaultBuilder(args)
+			.ConfigureWebHostDefaults(webBuilder =>
+			{
+				webBuilder.UseStartup<Startup>();
+			});
+}
+```
+
+***
+
+### Startup.cs
+```cs
+public class Startup
+{
+	// Use this method to add services to the container.
+	public void ConfigureServices(IServiceCollection services)
+	{
+		services.AddControllers();
+	}
+	
+	// Use this method to configure the HTTP request pipeline.
+	public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+	{
+		app.UseHttpsRedirection();
+		app.UseRouting();
+		app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+	}
+}
+```
+
+***
+
+### WeatherForecastController.cs
+
+```cs
+[ApiController]
+[Route("[controller]")]
+public class WeatherForecastController : ControllerBase
+{
+	private readonly ILogger<WeatherForecastController> _logger;
+	public WeatherForecastController(ILogger<WeatherForecastController> logger)
+	{
+		_logger = logger; // Пример Dependency Injection
+	}
+	[HttpGet]
+	public IEnumerable<WeatherForecast> Get()
+	{
+		return Enumerable.Range(1, 5).Select(index => ...).ToArray();
+	}
+}
+```
+
+***
+
+### Атрибуты MVC
+
+**Управление путями**
+`[Route("api/[controller]")]`, `[HttpGet("{id}")]`
+e.g. `GET api/weatherforecast/5`
+
+**Управление методами**
+`[HttpGet]`, `[HttpPost]`, `[HttpDelete]`
+`[HttpPut]`, `[HttpPatch]`,
+`[HttpHead]`, `[HttpOptions]`,
+
+**Управление источником данных**
+`[FromHeader]`, `[FromQuery]`, `[FromRoute]`,
+`[FromForm]`, `[FromBody]`, можно дописать свои
+
+***
+
+### Https в разработке
+
+Запустить команду `register-dev-certs.cmd`,
+или `register-dev-certs.sh`
+чтобы доверять сапоподписанным сертификатам .NET Core
+
+***
+
+### Запуск Web API
+
+```bash
+dotnet run -p WeatherApi
+```
+
+https://localhost:5001/api/weatherforecast
+http://localhost:5000/api/weatherforecast
+
+***
+
+### Подготовка к задаче UsersApi
+1. Паттерн Repository
+2. Data Transfer Object
+3. Запуск тестов
+
+***
+
+### Паттерн Repository
+
+```cs
+interface IUserRepository
+{
+    UserEntity Insert(UserEntity user);
+    UserEntity FindById(Guid id);
+    UserEntity GetOrCreateByLogin(string login);
+    void Update(UserEntity user);
+    UserEntity UpdateOrInsert(UserEntity user);
+    void Delete(Guid id);
+}
+```
+
+- Позволяет скрыть особенности хранения данных за абстракцией
+- Можно разрабатывать и тестировать API отдельно от БД
+- Каждому тип сущностей — отдельный репозиторий
+- Содержит все нужные и допустимые методы
+
+***
+
+### Data Transfer Object
+
+**Простой объект для передачи данных**,
+не содержит методов и логики
+
+Если API принимает или возвращает объекты
+в виде XML, JSON или других форматах, то это DTO
+
+**Полезно создавать отдельные DTO** для каждого метода API,
+потому что набор полей или правил проверки
+отличается от метода к методу
+
+***
+
+### Именование DTO
+
+**Примеры названий для GET**
+- UserDto
+- UserToGetDto, UserToGet
+
+**Примеры названий для POST**
+- UserForCreationDto, UserForCreation
+- UserToCreateDto, UserToCreate
+- UserToPostDto, UserToPost
+
+И многие другие варианты...
+
+***
+
+### Запуск тестов
+
+1. Тесты находятся в `WebApiTests`
+2. Задать `BaseUrl` в `Configuration.cs`
+3. Запуск встроенными в IDE инструментами или запуск WebApiTests как консольного приложения.
+
+Удобно открыть две IDE:
+- одну для редактирования и запуска API
+- другую для запуска и отладки тестов.
+
+***
+
+### Задача UsersApi
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Документация API
+
+***
+
+### Проблема
+
+Чтобы использовать API, надо его узнать!
+
+<div class="fragment">Значит кто-то должен описать.</div>
+
+<div class="fragment">
+Если API описывает аналитик/разработчик:
+<ul><li>Ошибки и неточности<li>Сложно описать все<li>Нестандартно, как получится</ul>
+</div>
+
+***
+
+### Стандарт описания API — решение
+
+**Swagger 2.0** или **OpenApi 3.0** от SmartBear
+
+Можно описывать API на yaml или json
+
+***
+
+### Демо Swagger
+
+Для использования Swagger в .NET есть библиотека **Swashbuckle**
+
+Чтобы воспользоваться, надо подключить к `Startup.cs`
+методы из `/WebApi/Samples/SwaggerExtensions.cs`
+
+В результате:
+- Появится визуализация API при старте WebApi
+- UI можно использовать для отправки запросов
+- Реальное описание доступно по адресу в виде JSON
+`/swagger/web-game/swagger.json`
+- `swagger.json` можно редактировать в https://editor.swagger.io
+- Содержимое `swagger.json` можно импортировать в программы для взаимодействия с Web API, например, Postman
+
+***
+
+<h3 class="center">Даже автосгенерированный Swagger значительно облегчает жизнь фронтендеру!</h3>
+
+***
+
+### Дополнительные источники документации
+
+- Аннотации из ASP.NET Core
+- Xml Documentation Comments
+- Swashbuckle Annotations
+
+***
+
+### Аннотации из ASP.NET Core
+
+```cs
+[HttpGet("{userId}")]
+[Produces("application/json", "application/xml")]
+ActionResult<UserDto> GetUserById([FromRoute] Guid userId) { /*...*/ }
+```
+
+***
+
+### Xml Documentation Comments
+
+```cs
+/// <summary>
+/// Получить пользователя
+/// </summary>
+/// <param name="userId">Идентификатор пользователя</param>
+ActionResult<UserDto> GetUserById([FromRoute] Guid userId) { /*...*/ }
+```
+
+***
+
+### Swashbuckle Annotations
+
+```cs
+[SwaggerResponse(200, "OK", typeof(UserDto))]
+[SwaggerResponse(404, "Пользователь не найден")]
+ActionResult<UserDto> GetUserById([FromRoute] Guid userId) { /*...*/ }
+```
+
+***
+
+### Описание без Swashbuckle Annotations
+
+```cs
+/// <summary>
+/// Получить пользователей
+/// </summary>
+/// <param name="pageNumber">Номер страницы, по умолчанию 1</param>
+/// <param name="pageSize">Размер страницы, по умолчанию 20</param>
+/// <response code="200">OK</response>
+[HttpGet(Name = nameof(GetUsers))]
+[Produces("application/json", "application/xml")]
+[ProducesResponseType(typeof(IEnumerable<UserDto>), 200)]
+IActionResult GetUsers(int pageNumber, int pageSize) { /*...*/ }
+```
+
+**Приходится описывать code у response в двух местах :(**
+
+***
+
+### Описание Media Type для PATCH
+
+```cs
+[HttpPatch("{userId}")]
+[Consumes("application/json-patch+json")]
+[Produces("application/json", "application/xml")]
+IActionResult PartiallyUpdateUser([FromRoute] Guid userId,
+    [FromBody] JsonPatchDocument<object> patchDoc) { /*...*/ }
+```
+
+***
+
+### Демо Описания для Swagger
+
+Скопировать в `UsersController` описания из
+`/WebApi/Samples/ISwaggerDescriptionsForUsersController.cs`
+
+***
+
+### Результат использования Swagger
+
+- **Автогенерация описания** по коду сервера
+- Стандартная и понятная **визуализация API**
+- **Песочница**, чтобы делать запросы
+- **Автогенерация клиентов и серверов** по описанию
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+## Инструменты для взаимодействия с API
+
+***
+
+### Демо Postman
+
+1. Import / Import File
+   Из `/WebApi/Samples/UsersApi.postman_collection.json`
+   Также можно импортировать из Swagger
+2. File / Settings / General / SSL certificate verification
+   *Установить в OFF*
+3. Collections / UsersApi / Выбрать ... / Edit / Variables / baseUrl
+   *Записать адрес, где развернуто приложение*
+4. Collections / UsersApi / Открыть любой запрос
+   *Запустить*: увидеть статус код, тело, результаты тестов
+   *Найти*: Params, Headers, Body, Pre-request Script, Tests
+5. Runner / Collection Runner / UsersApi / Run UsersApi
+   *Посмотреть результат прохождения тестов*
+6. Console
+   *Показать, что можно смотреть информацию по запросам*
+
+***
+
+### Postman — UI для бэкендера
+
+
+</script></section>
+
+
+<section data-markdown><script type="text/template">
+
+
+## Вопросы?
+
+
+</script></section>
+
+
+</div></div>
+</body>
+</html>

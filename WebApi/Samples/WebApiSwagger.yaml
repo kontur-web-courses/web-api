@@ -1,0 +1,496 @@
+openapi: 3.0.1
+info:
+  title: Web Game API
+  version: '0.1'
+paths:
+  '/api/games/{gameId}':
+    get:
+      tags:
+        - Games
+      operationId: GetGame
+      parameters:
+        - name: gameId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/GameDto'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameDto'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/GameDto'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/GameDto'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/GameDto'
+  /api/games:
+    post:
+      tags:
+        - Games
+      operationId: CreateGame
+      requestBody:
+        content:
+          application/json-patch+json:
+            schema:
+              $ref: '#/components/schemas/GameToCreateDto'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GameToCreateDto'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/GameToCreateDto'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/GameToCreateDto'
+      responses:
+        '200':
+          description: Success
+  '/api/users/{userId}/game/decide':
+    post:
+      tags:
+        - Games
+      operationId: DecideInGame
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json-patch+json:
+            schema:
+              enum:
+                - None
+                - Rock
+                - Scissors
+                - Paper
+              type: string
+          application/json:
+            schema:
+              enum:
+                - None
+                - Rock
+                - Scissors
+                - Paper
+              type: string
+          text/json:
+            schema:
+              enum:
+                - None
+                - Rock
+                - Scissors
+                - Paper
+              type: string
+          application/*+json:
+            schema:
+              enum:
+                - None
+                - Rock
+                - Scissors
+                - Paper
+              type: string
+      responses:
+        '200':
+          description: Success
+  '/api/users/{userId}/game/finish':
+    post:
+      tags:
+        - Games
+      operationId: FinishGame
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Success
+  '/api/users/{userId}':
+    get:
+      tags:
+        - Users
+      summary: Получить пользователя
+      operationId: GetUserById
+      parameters:
+        - name: userId
+          in: path
+          description: Идентификатор пользователя
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/UserDto'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Void'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Void'
+    delete:
+      tags:
+        - Users
+      summary: Удалить пользователя
+      operationId: DeleteUser
+      parameters:
+        - name: userId
+          in: path
+          description: Идентификатор пользователя
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Пользователь удален
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Void'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Void'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Void'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Void'
+    put:
+      tags:
+        - Users
+      summary: Обновить пользователя
+      operationId: UpdateUser
+      parameters:
+        - name: userId
+          in: path
+          description: Идентификатор пользователя
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserToUpdateDto'
+      responses:
+        '201':
+          description: Пользователь создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Void'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Void'
+        '204':
+          description: Пользователь обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Void'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Void'
+        '400':
+          description: Некорректные входные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Void'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Void'
+        '422':
+          description: Ошибка при проверке
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Void'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Void'
+    patch:
+      tags:
+        - Users
+      summary: Частично обновить пользователя
+      operationId: PartiallyUpdateUser
+      parameters:
+        - name: userId
+          in: path
+          description: Идентификатор пользователя
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json-patch+json:
+            schema:
+              uniqueItems: false
+              type: array
+              items:
+                $ref: '#/components/schemas/Operation'
+      responses:
+        '204':
+          description: Пользователь обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Void'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Void'
+        '400':
+          description: Некорректные входные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Void'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Void'
+        '404':
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Void'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Void'
+        '422':
+          description: Ошибка при проверке
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Void'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Void'
+  /api/users:
+    post:
+      tags:
+        - Users
+      summary: Создать пользователя
+      description: "Пример запроса:\r\n            \r\n    POST /api/users\r\n    {\r\n       \"login\": \"johndoe375\",\r\n       \"firstName\": \"John\",\r\n       \"lastName\": \"Doe\"\r\n    }"
+      operationId: CreateUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserToCreateDto'
+      responses:
+        '201':
+          description: Пользователь создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Void'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Void'
+        '400':
+          description: Некорректные входные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Void'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Void'
+        '422':
+          description: Ошибка при проверке
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Void'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Void'
+    get:
+      tags:
+        - Users
+      summary: Получить пользователей
+      operationId: GetUsers
+      parameters:
+        - name: pageNumber
+          in: query
+          description: 'Номер страницы, по умолчанию 1'
+          schema:
+            type: integer
+            format: int32
+            default: 1
+        - name: pageSize
+          in: query
+          description: 'Размер страницы, по умолчанию 20'
+          schema:
+            type: integer
+            format: int32
+            default: 10
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                uniqueItems: false
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserDto'
+            application/xml:
+              schema:
+                uniqueItems: false
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserDto'
+    options:
+      tags:
+        - Users
+      summary: Опции по запросам о пользователях
+      operationId: GetUsersOptions
+      responses:
+        '200':
+          description: OK
+components:
+  schemas:
+    GameDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        players:
+          uniqueItems: false
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayerDto'
+        turnsCount:
+          type: integer
+          format: int32
+        currentTurnIndex:
+          type: integer
+          format: int32
+        status:
+          enum:
+            - WaitingToStart
+            - Playing
+            - Finished
+            - Canceled
+          type: string
+    PlayerDto:
+      type: object
+      properties:
+        userId:
+          type: string
+        login:
+          type: string
+        decision:
+          enum:
+            - None
+            - Rock
+            - Scissors
+            - Paper
+          type: string
+        score:
+          type: integer
+          format: int32
+    GameToCreateDto:
+      type: object
+      properties:
+        firstPlayerId:
+          type: string
+          format: uuid
+        secondPlayerId:
+          type: string
+          format: uuid
+        turnsCount:
+          maximum: 20
+          minimum: 1
+          type: integer
+          format: int32
+    UserDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        login:
+          type: string
+        fullName:
+          type: string
+        gamesPlayed:
+          type: integer
+          format: int32
+        currentGameId:
+          type: string
+          format: uuid
+    Void:
+      type: object
+    UserToUpdateDto:
+      required:
+        - firstName
+        - lastName
+        - login
+      type: object
+      properties:
+        login:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+    Operation:
+      type: object
+      properties:
+        value:
+          type: object
+        path:
+          type: string
+        op:
+          type: string
+        from:
+          type: string
+    UserToCreateDto:
+      required:
+        - login
+      type: object
+      properties:
+        login:
+          type: string
+        firstName:
+          type: string
+          default: John
+        lastName:
+          type: string
+          default: Doe
