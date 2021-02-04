@@ -2,14 +2,14 @@ using FluentAssertions;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using System;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 
-namespace WebApiTests
+namespace Tests
 {
-
     [TestFixture]
-    public class Task4_PartiallyUpdateUserTests : UsersApiTestsBase
+    public class Task3_UpdateUserTests : UsersApiTestsBase
     {
         [Test]
         public void Test1_Code204_WhenAllIsFine()
@@ -20,26 +20,15 @@ namespace WebApiTests
             });
 
             var request = new HttpRequestMessage();
-            request.Method = HttpMethod.Patch;
+            request.Method = HttpMethod.Put;
             request.RequestUri = BuildUsersByIdUri(createdUserId);
             request.Headers.Add("Accept", "*/*");
-            request.Content = new object[] {
-                new {
-                    op = "replace",
-                    path = "login",
-                    value = "Anon"
-                },
-                new {
-                    op = "replace",
-                    path = "firstName",
-                    value = "Vendetta"
-                },
-                new {
-                    op = "replace",
-                    path = "lastName",
-                    value = "V"
-                }
-            }.SerializeToJsonContent("application/json-patch+json");
+            request.Content = new
+            {
+                login = "Anon",
+                firstName = "Vendetta",
+                lastName = "V"
+            }.SerializeToJsonContent();
             var response = httpClient.Send(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -56,64 +45,56 @@ namespace WebApiTests
         }
 
         [Test]
-        public void Test2_Code404_WhenNoUser()
+        public void Test2_Code201_WhenNoUser()
         {
             var updatingUserId = Guid.NewGuid().ToString();
 
             var request = new HttpRequestMessage();
-            request.Method = HttpMethod.Patch;
+            request.Method = HttpMethod.Put;
             request.RequestUri = BuildUsersByIdUri(updatingUserId);
             request.Headers.Add("Accept", "*/*");
-            request.Content = new object[] {
-                new {
-                    op = "replace",
-                    path = "login",
-                    value = "Anon"
-                },
-                new {
-                    op = "replace",
-                    path = "firstName",
-                    value = "Vendetta"
-                },
-                new {
-                    op = "replace",
-                    path = "lastName",
-                    value = "V"
-                }
-            }.SerializeToJsonContent("application/json-patch+json");
+            request.Content = new
+            {
+                login = "mjackson",
+                firstName = "Michael",
+                lastName = "Jackson"
+            }.SerializeToJsonContent();
             var response = httpClient.Send(request);
 
-            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
-            response.ShouldNotHaveHeader("Content-Type");
+            response.StatusCode.Should().Be(HttpStatusCode.Created);
+            response.ShouldHaveHeader("Content-Type", "application/json; charset=utf-8");
+
+            var createdUserId = response.ReadContentAsJson().ToString();
+            createdUserId.Should().NotBeNullOrEmpty();
+            var createdUserUri = response.GetRequiredHeader("Location").SingleOrDefault();
+            createdUserUri.Should().NotBeNullOrEmpty();
+
+            CheckUserCreated(createdUserId, createdUserUri, new
+            {
+                id = createdUserId,
+                login = "mjackson",
+                fullName = "Jackson Michael",
+                gamesPlayed = 0,
+                currentGameId = (string)null
+            });
         }
 
         [Test]
-        public void Test3_Code404_WhenUserIdIsTrash()
+        public void Test3_Code400_WhenUserIdIsTrash()
         {
             var request = new HttpRequestMessage();
-            request.Method = HttpMethod.Patch;
+            request.Method = HttpMethod.Put;
             request.RequestUri = BuildUsersByIdUri("trash");
             request.Headers.Add("Accept", "*/*");
-            request.Content = new object[] {
-                new {
-                    op = "replace",
-                    path = "login",
-                    value = "Anon"
-                },
-                new {
-                    op = "replace",
-                    path = "firstName",
-                    value = "Vendetta"
-                },
-                new {
-                    op = "replace",
-                    path = "lastName",
-                    value = "V"
-                }
-            }.SerializeToJsonContent("application/json-patch+json");
+            request.Content = new
+            {
+                login = "Anon",
+                firstName = "Vendetta",
+                lastName = "V"
+            }.SerializeToJsonContent();
             var response = httpClient.Send(request);
 
-            response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             response.ShouldNotHaveHeader("Content-Type");
         }
 
@@ -123,10 +104,10 @@ namespace WebApiTests
             var updatingUserId = Guid.NewGuid().ToString();
 
             var request = new HttpRequestMessage();
-            request.Method = HttpMethod.Patch;
+            request.Method = HttpMethod.Put;
             request.RequestUri = BuildUsersByIdUri(updatingUserId);
             request.Headers.Add("Accept", "*/*");
-            request.AddEmptyContent("application/json-patch+json");
+            request.AddEmptyContent("application/json; charset=utf-8");
             var response = httpClient.Send(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -142,16 +123,14 @@ namespace WebApiTests
             });
 
             var request = new HttpRequestMessage();
-            request.Method = HttpMethod.Patch;
+            request.Method = HttpMethod.Put;
             request.RequestUri = BuildUsersByIdUri(createdUserId);
             request.Headers.Add("Accept", "*/*");
-            request.Content = new object[] {
-                new {
-                    op = "replace",
-                    path = "login",
-                    value = ""
-                }
-            }.SerializeToJsonContent("application/json-patch+json");
+            request.Content = new
+            {
+                firstName = "Vendetta",
+                lastName = "V"
+            }.SerializeToJsonContent();
             var response = httpClient.Send(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
@@ -170,16 +149,15 @@ namespace WebApiTests
             });
 
             var request = new HttpRequestMessage();
-            request.Method = HttpMethod.Patch;
+            request.Method = HttpMethod.Put;
             request.RequestUri = BuildUsersByIdUri(createdUserId);
             request.Headers.Add("Accept", "*/*");
-            request.Content = new object[] {
-                new {
-                    op = "replace",
-                    path = "login",
-                    value = "!Anon!"
-                }
-            }.SerializeToJsonContent("application/json-patch+json");
+            request.Content = new
+            {
+                login = "!Anon!",
+                firstName = "Vendetta",
+                lastName = "V"
+            }.SerializeToJsonContent();
             var response = httpClient.Send(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
@@ -198,16 +176,14 @@ namespace WebApiTests
             });
 
             var request = new HttpRequestMessage();
-            request.Method = HttpMethod.Patch;
+            request.Method = HttpMethod.Put;
             request.RequestUri = BuildUsersByIdUri(createdUserId);
             request.Headers.Add("Accept", "*/*");
-            request.Content = new object[] {
-                new {
-                    op = "replace",
-                    path = "firstName",
-                    value = ""
-                }
-            }.SerializeToJsonContent("application/json-patch+json");
+            request.Content = new
+            {
+                login = "Anon",
+                lastName = "V"
+            }.SerializeToJsonContent();
             var response = httpClient.Send(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
@@ -226,16 +202,14 @@ namespace WebApiTests
             });
 
             var request = new HttpRequestMessage();
-            request.Method = HttpMethod.Patch;
+            request.Method = HttpMethod.Put;
             request.RequestUri = BuildUsersByIdUri(createdUserId);
             request.Headers.Add("Accept", "*/*");
-            request.Content = new object[] {
-                new {
-                    op = "replace",
-                    path = "lastName",
-                    value = ""
-                }
-            }.SerializeToJsonContent("application/json-patch+json");
+            request.Content = new
+            {
+                login = "Anon",
+                firstName = "Vendetta",
+            }.SerializeToJsonContent();
             var response = httpClient.Send(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);

@@ -2,29 +2,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build console",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/ConsoleApp/ConsoleApp.csproj"
-            ],
-            "problemMatcher": "$msCompile",
-            "group": "build"
-        },
-        {
-            "label": "build dbtests",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/DbTests/DbTests.csproj"
-            ],
-            "problemMatcher": "$msCompile",
-            "group": "build"
-        },
-        {
-            "label": "build web",
+            "label": "build WebApi",
             "command": "dotnet",
             "type": "process",
             "args": [
@@ -35,12 +13,12 @@
             "group": "build"
         },
         {
-            "label": "build webtests",
+            "label": "build Tests",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/WebApiTests/WebApiTests.csproj"
+                "${workspaceFolder}/Tests/Tests.csproj"
             ],
             "problemMatcher": "$msCompile",
             "group": "build"

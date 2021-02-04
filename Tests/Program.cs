@@ -1,6 +1,6 @@
 using NUnitLite;
 
-namespace WebApiTests
+namespace Tests
 {
     public class Program
     {

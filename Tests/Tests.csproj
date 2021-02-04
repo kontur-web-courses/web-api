@@ -5,7 +5,7 @@
 
     <IsPackable>false</IsPackable>
 
-    <StartupObject>WebApiTests.Program</StartupObject>
+    <StartupObject>Tests.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>

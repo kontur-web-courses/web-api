@@ -9,7 +9,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Xml.Linq;
 
-namespace WebApiTests
+namespace Tests
 {
     public static class Extensions
     {

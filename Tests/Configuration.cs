@@ -1,4 +1,4 @@
-namespace WebApiTests
+namespace Tests
 {
     public static class Configuration
     {
