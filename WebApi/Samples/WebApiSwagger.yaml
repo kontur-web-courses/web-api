@@ -1,6 +1,6 @@
 openapi: 3.0.1
 info:
-  title: Web Game API
+  title: Web API
   version: '0.1'
 paths:
   '/api/games/{gameId}':

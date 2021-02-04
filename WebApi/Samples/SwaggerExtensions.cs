@@ -17,9 +17,9 @@ namespace WebApi.Samples
             services.AddSwaggerGen(c =>
             {
                 // Создаем документ с описанием API
-                c.SwaggerDoc("web-game", new OpenApiInfo
+                c.SwaggerDoc("web-api", new OpenApiInfo
                 {
-                    Title = "Web Game API",
+                    Title = "Web API",
                     Version = "0.1",
                 });
 
@@ -38,7 +38,7 @@ namespace WebApi.Samples
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
-                c.SwaggerEndpoint("/swagger/web-game/swagger.json", "Web Game API");
+                c.SwaggerEndpoint("/swagger/web-api/swagger.json", "Web API");
                 c.RoutePrefix = string.Empty;
             });
         }
