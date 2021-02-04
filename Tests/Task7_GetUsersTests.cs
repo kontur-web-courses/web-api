@@ -6,7 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 
-namespace WebApiTests
+namespace Tests
 {
     [TestFixture]
     public class Task7_GetUsersTests : UsersApiTestsBase

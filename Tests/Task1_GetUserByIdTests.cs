@@ -3,7 +3,7 @@ using NUnit.Framework;
 using System.Net;
 using System.Net.Http;
 
-namespace WebApiTests
+namespace Tests
 {
     [TestFixture]
     public class Task1_GetUserByIdTests : UsersApiTestsBase

@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Web;
 
-namespace WebApiTests
+namespace Tests
 {
     public abstract class UsersApiTestsBase
     {
