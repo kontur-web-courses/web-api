@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
 
 namespace WebApi
 {
@@ -7,11 +7,20 @@ namespace WebApi
     {
         public static void Main(string[] args)
         {
-            CreateWebHostBuilder(args).Build().Run();
+            CreateHostBuilder(args).Build().Run();
         }
+        
+        private static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    // NOTE: Жесткий способ настройки, который сработает в 100% различных IDE.
+                    // Для продакшена следует использовать аргументы командной строки,
+                    // переменные окружения, файлы конфигурации
+                    webBuilder.UseUrls("https://localhost:5001;http://localhost:5000");
+                    webBuilder.UseEnvironment("Development");
 
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .UseStartup<Startup>();
+                    webBuilder.UseStartup<Startup>();
+                });
     }
 }
