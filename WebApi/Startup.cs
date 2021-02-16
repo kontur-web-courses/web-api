@@ -52,6 +52,7 @@ namespace WebApi
                         $"{src.LastName} {src.FirstName}"));
 
                 cfg.CreateMap<UserToCreateDto, UserEntity>();
+                cfg.CreateMap<UserToUpdateDto, UserEntity>();
             }, Array.Empty<Assembly>());
         }
 
