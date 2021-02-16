@@ -164,5 +164,12 @@ namespace WebApi.Controllers
                     pageSize
                 });
         }
+        
+        [HttpOptions]
+        public IActionResult GetUsersOptions()
+        {
+            Response.Headers.Add("Allow", "POST,GET,OPTIONS");
+            return Ok();
+        }
     }
 }
