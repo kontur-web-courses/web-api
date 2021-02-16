@@ -53,6 +53,7 @@ namespace WebApi
 
                 cfg.CreateMap<UserToCreateDto, UserEntity>();
                 cfg.CreateMap<UserToUpdateDto, UserEntity>();
+                cfg.CreateMap<UserEntity, UserToUpdateDto>();
             }, Array.Empty<Assembly>());
         }
 
