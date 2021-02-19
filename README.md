@@ -3,8 +3,9 @@
 ## Подготовка
 
 Чтобы установить доверия к сертификатам ASP.NET Core, сделай следующее в зависимости от ОС:
-- в Windows выполни из под администратора пакетный файл `register-dev-certs.cmd`.
-- в Linux/Mac выполни в терминале в склонированной команду `sudo ./register-dev-certs.sh`
+- в Windows выполни из под администратора пакетный файл `dev-certs/win-dev-certs-registration.cmd`.
+- в Mac выполни в терминале в склонированной папке команду `sudo ./dev-certs/mac-dev-certs-registration.sh`
+- в остальных случаях склонируй репозиторий `https://github.com/kontur-web-courses/dev-certs` и следуй инструкциям из него
 
 
 ## Задача UsersApi
