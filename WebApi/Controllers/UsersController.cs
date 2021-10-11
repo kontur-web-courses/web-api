@@ -12,8 +12,8 @@ namespace WebApi.Controllers
     [Produces("application/json", "application/xml")]
     public class UsersController : Controller
     {
-        private IUserRepository repository;
-        private IMapper mapper;
+        private readonly IUserRepository repository;
+        private readonly IMapper mapper;
         
         // Чтобы ASP.NET положил что-то в userRepository требуется конфигурация
         public UsersController(IUserRepository repository, IMapper mapper)
@@ -54,14 +54,38 @@ namespace WebApi.Controllers
                 return UnprocessableEntity(ModelState);
             }
 
-            var user = this.mapper.Map<UserEntity>(userToCreate);
+            var user = mapper.Map<UserEntity>(userToCreate);
 
-            var createdUserEntity = this.repository.Insert(user);
+            var createdUserEntity = repository.Insert(user);
 
             return CreatedAtRoute(
                 nameof(GetUserById),
                 new { userId = createdUserEntity.Id },
                 createdUserEntity.Id);
+        }
+
+        [HttpPut("{userId}")]
+        public IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] UserToUpdateDto userToUpdate)
+        {
+            if (userToUpdate is null || userId == Guid.Empty)
+                return BadRequest();
+
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+
+            var user = new UserEntity(userId);
+            
+            mapper.Map(userToUpdate, user);
+            
+            repository.UpdateOrInsert(user, out var isInserted);
+
+            if (!isInserted)
+                return NoContent();
+            
+            return CreatedAtRoute(
+                nameof(GetUserById),
+                new { userId = user.Id },
+                user.Id);
         }
     }
 }
