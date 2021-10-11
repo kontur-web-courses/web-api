@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Data.SqlTypes;
 using AutoMapper;
 using Game.Domain;
@@ -6,6 +7,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using WebApi.Models;
 
 namespace WebApi
@@ -24,14 +27,29 @@ namespace WebApi
         {
             services.AddControllers(options =>
                 {
-                    options.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
+                    // options.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
+                    options.OutputFormatters.Add(new
+                        XmlSerializerOutputFormatter());
+                    options.OutputFormatters.Insert(0, new
+                        NewtonsoftJsonOutputFormatter(new JsonSerializerSettings
+                        {
+                            ContractResolver = new
+                                CamelCasePropertyNamesContractResolver(),
+                            DefaultValueHandling = DefaultValueHandling.Populate
+                        }, ArrayPool<char>.Shared, options));
                     options.ReturnHttpNotAcceptable = true;
                     options.RespectBrowserAcceptHeader = true;
                 })
-                .ConfigureApiBehaviorOptions(options => {
+                .ConfigureApiBehaviorOptions(options =>
+                {
                     options.SuppressModelStateInvalidFilter = true;
                     options.SuppressMapClientErrors = true;
                 });
+                // .AddNewtonsoftJson(options =>
+                // {
+                //     options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                //     // optin
+                // });
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
             services.AddAutoMapper(cfg =>
             {
@@ -40,7 +58,9 @@ namespace WebApi
                         opt => opt.MapFrom(
                             src => $"{src.LastName} {src.FirstName}"));
                 cfg.CreateMap<UserCreationDto, UserEntity>();
+                cfg.CreateMap<UserUpdateDto, UserEntity>();
             }, new System.Reflection.Assembly[0]);
+           
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

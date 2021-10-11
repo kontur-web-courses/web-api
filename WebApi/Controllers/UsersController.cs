@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using AutoMapper;
 using Game.Domain;
 using Microsoft.AspNetCore.Mvc;
@@ -44,21 +45,47 @@ namespace WebApi.Controllers
 
             if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("login", "Некорректный логин");
-
                 return UnprocessableEntity(ModelState);
+            }
+            // if (String.IsNullOrEmpty(user.Login) || user.Login.Any(c => !Char.IsLetterOrDigit(c)))
+            if (user.Login.Any(c => !Char.IsLetterOrDigit(c)))
+            {
+                ModelState.AddModelError("login", "Некорректный логин");
+                return UnprocessableEntity(ModelState);
+            }
+            
+            
+            var userEntity = mapper.Map<UserEntity>(user);
+            var createdUserEntity = userRepository.Insert(userEntity);
+            return CreatedAtRoute(
+                nameof(GetUserById),
+                new { userId = createdUserEntity.Id },
+                createdUserEntity.Id);
+        }
+
+        [HttpPut("{userId}")]
+        public ActionResult<UserEntity> UpdateUser([FromRoute] string userId, [FromBody] UserUpdateDto user)
+        {
+            if (!ModelState.IsValid)
+            {
+                return UnprocessableEntity(ModelState);
+            }
+
+            var guid = Guid.Parse(userId);
+            UserEntity newUser = new UserEntity(guid);
+            mapper.Map(user, newUser);
+            
+            userRepository.UpdateOrInsert(newUser, out bool inserted);
+
+            if (inserted)
+            {
+                return newUser;
             }
             else
             {
-                var userEntity = mapper.Map<UserEntity>(user);
-                var createdUserEntity = userRepository.Insert(userEntity);
-                return CreatedAtRoute(
-                    nameof(GetUserById),
-                    new { userId = createdUserEntity.Id },
-                    createdUserEntity.Id);
+                return Ok();
             }
-            
-            
+
         }
     }
 }
