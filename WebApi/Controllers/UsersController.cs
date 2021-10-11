@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Linq;
 using AutoMapper;
 using Game.Domain;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,7 @@ namespace WebApi.Controllers
             this.mapper = mapper;
         }
 
-        [HttpGet("{userId}")]
+        [HttpGet("{userId}", Name = nameof(GetUserById))]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
             var user = repository.FindById(userId);
@@ -33,9 +34,33 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateUser([FromBody] object user)
+        public IActionResult CreateUser([FromBody] UserToCreateDto userToCreate)
         {
-            throw new NotImplementedException();
+            if (userToCreate is null)
+            {
+                return BadRequest();
+            }
+
+            if (userToCreate.Login != null && !userToCreate.Login.All(c => char.IsLetterOrDigit(c)))
+            {
+                ModelState.AddModelError(
+                    nameof(userToCreate.Login),
+                    "Login should contain only letters or digits");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return UnprocessableEntity(ModelState);
+            }
+
+            var user = this.mapper.Map<UserEntity>(userToCreate);
+
+            var createdUserEntity = this.repository.Insert(user);
+
+            return CreatedAtRoute(
+                nameof(GetUserById),
+                new { userId = createdUserEntity.Id },
+                createdUserEntity.Id);
         }
     }
 }
