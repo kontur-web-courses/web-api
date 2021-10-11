@@ -20,7 +20,7 @@ namespace WebApi.Controllers
             this.mapper = mapper;
         }
 
-        [HttpGet("{userId}")]
+        [HttpGet("{userId}", Name = nameof(GetUserById))]
         [Produces("application/json", "application/xml")]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
@@ -35,10 +35,30 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateUser([FromBody] object user)
+        public IActionResult CreateUser([FromBody] UserCreationDto user)
         {
-            // string Login, string FirstName и string LastName
-            throw new NotImplementedException();
+            if (user == null)
+            {
+                return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ModelState.AddModelError("login", "Некорректный логин");
+
+                return UnprocessableEntity(ModelState);
+            }
+            else
+            {
+                var userEntity = mapper.Map<UserEntity>(user);
+                var createdUserEntity = userRepository.Insert(userEntity);
+                return CreatedAtRoute(
+                    nameof(GetUserById),
+                    new { userId = createdUserEntity.Id },
+                    createdUserEntity.Id);
+            }
+            
+            
         }
     }
 }
