@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using WebApi.Models;
+using WebApi.Samples;
 
 namespace WebApi
 {
@@ -54,6 +55,8 @@ namespace WebApi
                 cfg.CreateMap<UserToCreateDto, UserEntity>();
                 cfg.CreateMap<UserToUpdateDto, UserEntity>();
             }, Array.Empty<Assembly>());
+
+            services.AddSwaggerGeneration();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -62,6 +65,8 @@ namespace WebApi
             app.UseDeveloperExceptionPage();
 
             app.UseHttpsRedirection();
+
+            app.UseSwaggerWithUI();
 
             app.UseRouting();
             app.UseAuthorization();
