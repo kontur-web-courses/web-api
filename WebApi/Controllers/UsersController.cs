@@ -24,6 +24,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("{userId}", Name = nameof(GetUserById))]
+        [HttpHead("{userId}")]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
             var user = repository.FindById(userId);
