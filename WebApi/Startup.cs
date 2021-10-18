@@ -53,6 +53,8 @@ namespace WebApi
                 cfg.CreateMap<UserEntity, UserForUpdateDto>();
             }, Array.Empty<Assembly>());
             
+            services.AddSwaggerGeneration();
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -61,6 +63,8 @@ namespace WebApi
             app.UseDeveloperExceptionPage();
 
             app.UseHttpsRedirection();
+            
+            app.UseSwaggerWithUI();
 
             app.UseRouting();
             app.UseAuthorization();
