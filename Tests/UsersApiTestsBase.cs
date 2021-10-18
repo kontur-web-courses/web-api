@@ -38,6 +38,21 @@ namespace Tests
             return uriBuilder.Uri;
         }
 
+        //aaaaaaaaaaaaaa
+        protected Uri BuildUsersWithPagesUri_(string pageNumber, int? pageSize)
+        {
+            var query = HttpUtility.ParseQueryString(string.Empty);
+            if (pageNumber != null)
+                query.Add("pageNumber", pageNumber);
+            if (pageSize.HasValue)
+                query.Add("pageSize", pageSize.Value.ToString());
+
+            var uriBuilder = new UriBuilder(Configuration.BaseUrl);
+            uriBuilder.Path = $"/api/users";
+            uriBuilder.Query = query.ToString();
+            return uriBuilder.Uri;
+        }
+
         protected void CheckUserCreated(string createdUserId, string createdUserUri, object expectedUser)
         {
             // Проверка, что идентификатор созданного пользователя возвращается в теле ответа
