@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
 using Game.Domain;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
+using Newtonsoft.Json;
 using WebApi.Models;
 
 namespace WebApi.Controllers
@@ -15,12 +18,13 @@ namespace WebApi.Controllers
     {
         private readonly IUserRepository repository;
         private readonly IMapper mapper;
+        private readonly LinkGenerator linkGenerator;
 
-        // Чтобы ASP.NET положил что-то в userRepository требуется конфигурация
-        public UsersController(IUserRepository repository, IMapper mapper)
+        public UsersController(IUserRepository repository, IMapper mapper, LinkGenerator linkGenerator)
         {
             this.repository = repository;
             this.mapper = mapper;
+            this.linkGenerator = linkGenerator;
         }
 
         [HttpGet("{userId}", Name = nameof(GetUserById))]
@@ -33,6 +37,28 @@ namespace WebApi.Controllers
                 return NotFound();
 
             return Ok(mapper.Map<UserDto>(user));
+        }
+
+        [HttpGet(Name = nameof(GetUsers))]
+        public ActionResult<ICollection<UserDto>> GetUsers(int pageNumber = 1, int pageSize = 10)
+        {
+            pageNumber = Math.Max(pageNumber, 1);
+            pageSize = Math.Min(Math.Max(pageSize, 1), 20);
+
+            var page = repository.GetPage(pageNumber, pageSize);
+
+            var paginationHeader = new
+            {
+                previousPageLink = page.HasPrevious ? GetUri(page.CurrentPage - 1, page.PageSize) : null,
+                nextPageLink = page.HasNext ? GetUri(page.CurrentPage + 1, page.PageSize) : null,
+                totalCount = page.TotalCount,
+                pageSize = page.PageSize,
+                currentPage = page.CurrentPage,
+                totalPages = page.TotalPages,
+            };
+            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(paginationHeader));
+
+            return Ok(page);
         }
 
         [HttpPost]
@@ -141,5 +167,8 @@ namespace WebApi.Controllers
             
             return Ok();
         }
+
+        private string GetUri(int pageNumber, int pageSize)
+            => linkGenerator.GetUriByRouteValues(HttpContext, nameof(GetUsers), new { pageNumber, pageSize });
     }
 }
