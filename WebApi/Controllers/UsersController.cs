@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using AutoMapper;
 using Game.Domain;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
+using Newtonsoft.Json;
 using WebApi.Models;
 
 namespace WebApi.Controllers
@@ -14,15 +17,18 @@ namespace WebApi.Controllers
     public class UsersController : Controller
     {
         private IUserRepository userRepository;
-
         private IMapper mapper;
+
+        private LinkGenerator linkGenerator;
         // Чтобы ASP.NET положил что-то в userRepository требуется конфигурация
-        public UsersController(IUserRepository userRepository, IMapper mapper)
+        public UsersController(IUserRepository userRepository, IMapper mapper, LinkGenerator linkGenerator)
         {
             this.userRepository = userRepository;
             this.mapper = mapper;
+            this.linkGenerator = linkGenerator;
         }
 
+        [HttpHead("{userId}")]
         [HttpGet("{userId}", Name = nameof(GetUserById))]
         [Produces("application/json", "application/xml")]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
@@ -144,6 +150,72 @@ namespace WebApi.Controllers
             userRepository.Update(patchedUser);
 
             return NoContent();
+        }
+
+        [HttpDelete("{userId}")]
+        public IActionResult DeleteUser([FromRoute] Guid userId)
+        {
+            if (userId.Equals(Guid.Empty) || userRepository.FindById(userId) is null)
+            {
+                return NotFound();
+            }
+            
+            userRepository.Delete(userId);
+            return NoContent();
+        }
+
+        [HttpGet(Name = nameof(GetUsers))]
+        public IActionResult GetUsers(
+            [FromQuery(Name = "pageNumber")] int pageNumber = 1,
+            [FromQuery(Name = "pageSize")] int pageSize = 10)
+        {
+            pageNumber = Math.Max(pageNumber, 1);
+            pageSize = Math.Max(pageSize, 1);
+            pageSize = Math.Min(pageSize, 20);
+            
+            var pageList = userRepository.GetPage(pageNumber, pageSize);
+            var users = mapper.Map<IEnumerable<UserDto>>(pageList);
+            string previousePageLinkIfExists = null;
+            string nextPageLinkIfExists = null;
+            if (pageList.HasPrevious)
+            {
+                previousePageLinkIfExists = linkGenerator.GetUriByRouteValues(HttpContext, nameof(GetUsers), new
+                {
+                    pageNumber = pageNumber - 1,
+                    pageSize
+                });
+            }
+            if (pageList.HasNext)
+            {
+                nextPageLinkIfExists = linkGenerator.GetUriByRouteValues(HttpContext, nameof(GetUsers), new
+                {
+                    pageNumber = pageNumber + 1,
+                    pageSize
+                });
+            }
+            var paginationHeader = new
+            {
+                previousPageLink = previousePageLinkIfExists,
+                nextPageLink = nextPageLinkIfExists,
+                totalCount = pageList.TotalCount,
+                pageSize = pageList.PageSize,
+                currentPage = pageList.CurrentPage,
+                totalPages = pageList.TotalPages,
+            };
+            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(paginationHeader));
+            
+            return Ok(users);
+        }
+
+        public IActionResult OptionsUsers()
+        {
+            string[] allowedMethods = new[]
+            {
+                "GET", "POST", "OPTIONS"
+            };
+            Response.Headers.Add("Allow", String.Join(", ", allowedMethods));
+
+            return Ok();
         }
     }
 }
