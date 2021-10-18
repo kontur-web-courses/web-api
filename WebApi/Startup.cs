@@ -59,8 +59,9 @@ namespace WebApi
                             src => $"{src.LastName} {src.FirstName}"));
                 cfg.CreateMap<UserCreationDto, UserEntity>();
                 cfg.CreateMap<UserUpdateDto, UserEntity>();
+                cfg.CreateMap<UserEntity, UserUpdateDto>();
             }, new System.Reflection.Assembly[0]);
-           
+            services.AddMvc().AddNewtonsoftJson();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using AutoMapper;
 using Game.Domain;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Models;
 
@@ -92,6 +94,56 @@ namespace WebApi.Controllers
                 return NoContent();
             }
 
+        }
+
+        [HttpPatch("{userId}")]
+        public IActionResult PatchUser([FromRoute] Guid userId,
+            [FromBody] JsonPatchDocument<UserUpdateDto> PatchDoc)
+        {
+            if (userId.Equals(Guid.Empty))
+            {
+                return NotFound();
+            }
+
+            if (PatchDoc is null)
+            {
+                return BadRequest();
+            }
+
+            UserEntity user = userRepository.FindById(userId);
+            if (user is null)
+            {
+                return NotFound();
+            }
+
+            UserUpdateDto updateDto = mapper.Map<UserUpdateDto>(user);
+            PatchDoc.ApplyTo(updateDto, ModelState);
+            UserEntity patchedUser = mapper.Map(updateDto, new UserEntity(userId));
+            Regex regex = new Regex("^[0-9\\p{L}]*$");
+            if (String.IsNullOrEmpty(patchedUser.Login) ||
+                !regex.IsMatch(patchedUser.Login))
+            {
+                ModelState.AddModelError("login", "Login must be not empty and should contain only letters or digits");
+            }
+
+            if (String.IsNullOrEmpty(patchedUser.FirstName))
+            {
+                ModelState.AddModelError("firstName", "FirstName must not be empty");
+            }
+            
+            if (String.IsNullOrEmpty(patchedUser.LastName))
+            {
+                ModelState.AddModelError("lastName", "LastName must not be empty");
+            }
+            
+            if (!ModelState.IsValid)
+            {
+                return UnprocessableEntity(ModelState);
+            }
+            
+            userRepository.Update(patchedUser);
+
+            return NoContent();
         }
     }
 }
