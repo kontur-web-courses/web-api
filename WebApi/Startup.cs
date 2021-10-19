@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using WebApi.Models;
+using WebApi.Samples;
 
 namespace WebApi
 {
@@ -52,15 +53,16 @@ namespace WebApi
                 cfg.CreateMap<UserToUpdate, UserEntity>();
                 cfg.CreateMap<UserEntity, UserToUpdate>();
             }, new System.Reflection.Assembly[0]);
+            
+            services.AddSwaggerGeneration();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseDeveloperExceptionPage();
-
             app.UseHttpsRedirection();
-
+            app.UseSwaggerUI();
             app.UseRouting();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
