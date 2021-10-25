@@ -1,3 +1,4 @@
+using System;
 using System.Security;
 using AutoMapper;
 using Game.Domain;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.TagHelpers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json.Serialization;
 using WebApi.Models;
 
 namespace WebApi
@@ -27,7 +29,11 @@ namespace WebApi
                 .ConfigureApiBehaviorOptions(options => {
                     options.SuppressModelStateInvalidFilter = true;
                     options.SuppressMapClientErrors = true;
-                });
+                })
+                .AddNewtonsoftJson(options =>
+                {
+                    options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                });;
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
             services.AddControllers(options =>
                 {
@@ -40,6 +46,8 @@ namespace WebApi
             {
                 cfg.CreateMap<UserEntity, UserDto>()
                     .ForMember(dest => dest.FullName, opt => opt.MapFrom(c => $"{c.LastName} {c.FirstName}"));
+                cfg.CreateMap<CreateUserDto, UserEntity>()
+                    .ForMember(dest => dest.Id, opt => opt.MapFrom(c => Guid.Empty));
             }, new System.Reflection.Assembly[0]);
         }
 

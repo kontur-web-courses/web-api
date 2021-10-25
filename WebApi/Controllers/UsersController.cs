@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using AutoMapper;
 using Game.Domain;
 using Microsoft.AspNetCore.Mvc;
@@ -13,14 +14,14 @@ namespace WebApi.Controllers
     {
         private IUserRepository userRepository;
         private IMapper mapper;
-        // Чтобы ASP.NET положил что-то в userRepository требуется конфигурация
+
         public UsersController(IUserRepository userRepository, IMapper mapper)
         {
             this.userRepository = userRepository;
             this.mapper = mapper;
         }
 
-        [HttpGet("{userId}")]
+        [HttpGet("{userId}", Name = nameof(GetUserById))]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
             var src = userRepository.FindById(userId);
@@ -31,9 +32,20 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateUser([FromBody] object user)
+        public IActionResult CreateUser([FromBody] CreateUserDto user)
         {
-            throw new NotImplementedException();
+            if (user == null)
+                return BadRequest();
+            if (user?.Login != null && !user.Login.ToCharArray().All(char.IsLetterOrDigit))
+                ModelState.AddModelError("Login", "Логин должен состоять из букв или цифр");
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+            var userEntity = mapper.Map<CreateUserDto, UserEntity>(user);
+            var createdUserEntity = userRepository.Insert(userEntity);
+            return CreatedAtRoute(
+                nameof(GetUserById),
+                new { userId = createdUserEntity.Id },
+                createdUserEntity.Id);
         }
     }
 }
