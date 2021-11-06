@@ -20,7 +20,8 @@ namespace WebApi.Controllers
             this.userRepository = userRepository;
             this.mapper = mapper;
         }
-
+        
+        [HttpHead("{userId}")]
         [HttpGet("{userId}", Name = nameof(GetUserById))]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
