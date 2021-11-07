@@ -27,7 +27,14 @@ namespace WebApi.Controllers
             this.mapper = mapper;
             this.linkGenerator = linkGenerator;
         }
-        
+
+        [HttpOptions]
+        public IActionResult GetOptions()
+        {
+            Response.Headers.Add("Allow", "POST, GET, OPTIONS");
+            return Ok();
+        }
+
         [HttpHead("{userId}")]
         [HttpGet("{userId}", Name = nameof(GetUserById))]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
