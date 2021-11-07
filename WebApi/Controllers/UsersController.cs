@@ -71,7 +71,7 @@ namespace WebApi.Controllers
             
             return Ok(users);
         }
-
+        
         [HttpPost]
         public IActionResult CreateUser([FromBody] CreateUserDto user)
         {
@@ -90,19 +90,38 @@ namespace WebApi.Controllers
         }
 
         [HttpPut("{userId}")]
-        public IActionResult UpdateUser([FromRoute] string userId, [FromBody] UpdateUserDto user)
+        public IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] UpdateUserDto user)
         {
-            if (user == null || !Guid.TryParse(userId, out var id))
+            if (user == null || userId == Guid.Empty)
                 return BadRequest();
             if (!ModelState.IsValid)
                 return UnprocessableEntity(ModelState);
-            var userEntity = mapper.Map<UpdateUserDto, UserEntity>(user, new UserEntity(id));
+            var userEntity = mapper.Map<UpdateUserDto, UserEntity>(user, new UserEntity(userId));
             userRepository.UpdateOrInsert(userEntity, out var isInserted);
             if (isInserted) 
                 return CreatedAtRoute(
                     nameof(GetUserById),
-                    new { userId = id },
-                    id);
+                    new { userId = userId },
+                    userId);
+            return NoContent();
+        }
+
+        [HttpPatch("{userId}")]
+        public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UpdateUserDto> patchDoc)
+        {
+            if (patchDoc == null) return BadRequest();
+            
+            var user = userRepository.FindById(userId);
+            if (user == null) return NotFound();
+
+            var updateDto = new UpdateUserDto();
+            patchDoc.ApplyTo(updateDto, ModelState);
+            if (!TryValidateModel(updateDto)) 
+                return UnprocessableEntity(ModelState);
+
+            mapper.Map(updateDto, user);
+            userRepository.Update(user);
+
             return NoContent();
         }
 
