@@ -29,7 +29,7 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateUser([FromBody] object user)
+        public IActionResult CreateUser([FromBody] UserToCreateDto user)
         {
             throw new NotImplementedException();
         }

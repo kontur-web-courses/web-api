@@ -42,6 +42,7 @@ namespace WebApi
                 {
                     cfg.CreateMap<UserEntity, UserDto>()
                         .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FirstName + ' ' + src.LastName));
+                    cfg.CreateMap<UserToCreateDto, UserEntity>();
                 }, Array.Empty<System.Reflection.Assembly>());
 
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
