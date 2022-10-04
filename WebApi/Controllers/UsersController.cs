@@ -31,7 +31,7 @@ namespace WebApi.Controllers
         [HttpPost]
         public IActionResult CreateUser([FromBody] UserToCreateDto user)
         {
-            if (user is null) return BadRequest();
+            if (!ModelState.IsValid) return UnprocessableEntity();
             var createdUserEntity = userRepository.Insert(mapper.Map<UserEntity>(user));
             return CreatedAtRoute(
                 nameof(GetUserById),
