@@ -42,7 +42,9 @@ namespace WebApi
             //.ConfigureApiBehaviorOptions();
             services.AddAutoMapper(cfg =>
             {
-                cfg.CreateMap<UserEntity, UserDto>();
+                cfg.CreateMap<UserEntity, UserDto>()
+                    .ForMember(dst => dst.FullName, opt => opt.MapFrom(src => $"{src.LastName} {src.FirstName}"));
+                cfg.CreateMap<CreateDtoUser, UserEntity>();
             }, new System.Reflection.Assembly[0]);
         }
 
