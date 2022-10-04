@@ -19,7 +19,7 @@ namespace WebApi.Controllers
             this.mapper = mapper;
         }
 
-        [HttpGet("{userId}")]
+        [HttpGet("{userId}", Name = nameof(GetUserById))]
         [Produces("application/json", "application/xml")]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
@@ -31,7 +31,13 @@ namespace WebApi.Controllers
         [HttpPost]
         public IActionResult CreateUser([FromBody] UserToCreateDto user)
         {
-            throw new NotImplementedException();
+            if (user is null) return BadRequest();
+            var createdUserEntity = userRepository.Insert(mapper.Map<UserEntity>(user));
+            return CreatedAtRoute(
+                nameof(GetUserById),
+                new { userId = createdUserEntity.Id },
+                createdUserEntity.Id
+            );
         }
     }
 }
