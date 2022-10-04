@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Game.Domain;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Models;
@@ -9,15 +9,28 @@ namespace WebApi.Controllers
     [ApiController]
     public class UsersController : Controller
     {
+        private readonly IUserRepository userRepository;
+
         // Чтобы ASP.NET положил что-то в userRepository требуется конфигурация
         public UsersController(IUserRepository userRepository)
         {
+            this.userRepository = userRepository;
         }
 
         [HttpGet("{userId}")]
+        [Produces("application/json", "application/xml")]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
-            throw new NotImplementedException();
+            var user = userRepository.FindById(userId);
+            if (user is null) return NotFound();
+            return Ok(new UserDto
+            {
+                FullName = user.FirstName + ' ' + user.LastName,
+                CurrentGameId = user.CurrentGameId,
+                GamesPlayed = user.GamesPlayed,
+                Id = user.Id,
+                Login = user.Login
+            });
         }
 
         [HttpPost]
