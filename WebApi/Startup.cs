@@ -1,9 +1,12 @@
+using AutoMapper;
 using Game.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System;
+using WebApi.Models;
 
 namespace WebApi
 {
@@ -33,6 +36,14 @@ namespace WebApi
                     options.SuppressModelStateInvalidFilter = true;
                     options.SuppressMapClientErrors = true;
                 });
+
+            services
+                .AddAutoMapper(cfg =>
+                {
+                    cfg.CreateMap<UserEntity, UserDto>()
+                        .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FirstName + ' ' + src.LastName));
+                }, Array.Empty<System.Reflection.Assembly>());
+
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
         }
 
