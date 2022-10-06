@@ -5,6 +5,8 @@ using AutoMapper;
 using Game.Domain;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
+using Newtonsoft.Json;
 using WebApi.Models;
 
 namespace WebApi.Controllers
@@ -15,12 +17,14 @@ namespace WebApi.Controllers
     {
         private readonly IUserRepository userRepository;
         private readonly IMapper mapper;
+        private readonly LinkGenerator linkGenerator;
 
         // Чтобы ASP.NET положил что-то в userRepository требуется конфигурация
-        public UsersController(IUserRepository userRepository, IMapper mapper)
+        public UsersController(IUserRepository userRepository, IMapper mapper, LinkGenerator linkGenerator)
         {
             this.userRepository = userRepository;
             this.mapper = mapper;
+            this.linkGenerator = linkGenerator;
         }
 
         [HttpGet("{userId}", Name = nameof(GetUserById))]
@@ -34,7 +38,7 @@ namespace WebApi.Controllers
                 : Ok(mapper.Map<UserDto>(userEntity));
         }
 
-        [HttpPost]
+        [HttpPost(Name = nameof(CreateUser))]
         [Produces("application/json", "application/xml")]
         public IActionResult CreateUser([FromBody] UserCreationDto user)
         {
@@ -61,7 +65,7 @@ namespace WebApi.Controllers
                 userEntity.Id);
         }
 
-        [HttpPut("{userId}")]
+        [HttpPut("{userId}", Name = nameof(UpdateUser))]
         [Produces("application/json", "application/xml")]
         public IActionResult UpdateUser([FromBody] UserUpdateDto user, [FromRoute] Guid userId)
         {
@@ -86,7 +90,7 @@ namespace WebApi.Controllers
                 : NoContent();
         }
 
-        [HttpPatch("{userId}")]
+        [HttpPatch("{userId}", Name = nameof(PartiallyUpdateUser))]
         [Produces("application/json", "application/xml")]
         public IActionResult PartiallyUpdateUser([FromBody] JsonPatchDocument<UserUpdateDto> patchDoc, [FromRoute] Guid userId)
         {
@@ -125,7 +129,7 @@ namespace WebApi.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{userId}")]
+        [HttpDelete("{userId}", Name = nameof(DeleteUser))]
         [Produces("application/json", "application/xml")]
         public IActionResult DeleteUser([FromRoute] Guid userId)
         {
@@ -136,6 +140,61 @@ namespace WebApi.Controllers
             }
             userRepository.Delete(userId);
             return NoContent();
+        }
+
+        [HttpGet(Name = nameof(GetUsers))]
+        [Produces("application/json", "application/xml")]
+        public IActionResult GetUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        {
+            pageNumber = pageNumber < 1 ? 1 : pageNumber;
+            
+            pageSize = pageSize < 1 ? 1 :
+                pageSize > 20 ? 20 :
+                pageSize;
+
+            var pageList = userRepository.GetPage(pageNumber, pageSize);
+            var users = mapper.Map<IEnumerable<UserDto>>(pageList);
+
+            var previousPageLink = !pageList.HasPrevious ?
+                null :
+                linkGenerator.GetUriByRouteValues(
+                HttpContext, 
+                nameof(GetUsers), 
+                new
+                {
+                    pageNumber = pageNumber - 1, pageSize
+                });
+
+            var nextPageLink = !pageList.HasNext ?
+                null :
+                linkGenerator.GetUriByRouteValues(
+                HttpContext,
+                nameof(GetUsers),
+                new
+                {
+                    pageNumber = pageNumber + 1, pageSize
+                }
+            );
+            
+            var paginationHeader = new
+            {
+                previousPageLink,
+                nextPageLink,
+                totalCount = pageList.TotalCount,
+                pageSize = pageList.PageSize,
+                currentPage = pageList.CurrentPage,
+                totalPages = pageList.TotalPages,
+            };
+            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(paginationHeader));
+            return Ok(users);
+        }
+        
+        [HttpOptions(Name = nameof(GetUserOptions))]
+        public IActionResult GetUserOptions()
+        {
+            var allowedMethods = new[] { "GET", "POST", "OPTIONS" };
+            Response.Headers.Add("Allow", allowedMethods);
+            return Ok();
         }
 
         private IReadOnlyCollection<(string key, string value)> GetErrors(UserUpdateDto userUpdateDto)
