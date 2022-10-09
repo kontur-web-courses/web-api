@@ -2,10 +2,11 @@ using AutoMapper;
 using Game.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using WebApi.Models;
 
 namespace WebApi
@@ -20,7 +21,6 @@ namespace WebApi
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
-        [Produces("application/json", "application/xml")]
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers()
@@ -38,23 +38,27 @@ namespace WebApi
                 // Эта настройка приводит к игнорированию заголовка Accept, когда он содержит */*
                 // Здесь она нужна, чтобы в этом случае ответ возвращался в формате JSON
                 options.RespectBrowserAcceptHeader = true;
+            }).AddNewtonsoftJson(options =>
+            {
+                options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                options.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Populate;
             });
-            //.ConfigureApiBehaviorOptions();
             services.AddAutoMapper(cfg =>
             {
                 cfg.CreateMap<UserEntity, UserDto>()
                     .ForMember(dst => dst.FullName, opt => opt.MapFrom(src => $"{src.LastName} {src.FirstName}"));
-                cfg.CreateMap<CreateDtoUser, UserEntity>();
+                cfg.CreateMap<DtoUserCreate, UserEntity>();
+                cfg.CreateMap<DtoUserUpdate, UserEntity>();
+                cfg.CreateMap<UserEntity, DtoUserUpdate>();
             }, new System.Reflection.Assembly[0]);
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseDeveloperExceptionPage();
-
             app.UseHttpsRedirection();
-
             app.UseRouting();
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>
