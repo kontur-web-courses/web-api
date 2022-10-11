@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using AutoMapper;
 using Game.Domain;
 using Microsoft.AspNetCore.Mvc;
@@ -29,9 +30,22 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
+        [Produces("application/json", "application/xml")]
         public IActionResult CreateUser([FromBody] UserToCreateDto user)
         {
-            if (!ModelState.IsValid) return UnprocessableEntity();
+            if (user is null)
+            {
+                return BadRequest();
+            }
+            if (!ModelState.IsValid)
+            {
+                return UnprocessableEntity(ModelState);
+            }
+            if (!user.Login.All(char.IsLetterOrDigit))
+            {
+                ModelState.AddModelError("Login", "Логин должен состоять только из цифр и букв");
+                return UnprocessableEntity(ModelState);
+            }
             var createdUserEntity = userRepository.Insert(mapper.Map<UserEntity>(user));
             return CreatedAtRoute(
                 nameof(GetUserById),
