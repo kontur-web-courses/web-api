@@ -21,6 +21,7 @@ namespace WebApi.Controllers
             this.mapper = mapper;
         }
 
+        [HttpHead("{userId}")]
         [HttpGet("{userId}", Name = nameof(GetUserById))]
         [Produces("application/json", "application/xml")]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
@@ -101,6 +102,13 @@ namespace WebApi.Controllers
             if (user is null) return NotFound();
             userRepository.Delete(userId);
             return NoContent();
+        }
+
+        [HttpOptions]
+        public ActionResult<UserDto> GetOptions()
+        {
+            Response.Headers.Add("Allow", new[] { "POST", "GET", "OPTIONS" });
+            return Ok();
         }
     }
 }
