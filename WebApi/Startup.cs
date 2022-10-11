@@ -66,7 +66,10 @@ namespace WebApi
                         );
                     });
                 cfg.CreateMap<UserEntity, UpdateDto>().ReverseMap();
+               
             });
+
+            services.AddSwaggerGen();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -77,8 +80,15 @@ namespace WebApi
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
             app.UseAuthorization();
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+           
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1");
+            });
         }
     }
 }

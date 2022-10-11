@@ -8,11 +8,12 @@ namespace WebApi.Controllers
     using System.Collections.Generic;
     using System.Linq;
     using AutoMapper;
+    using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.JsonPatch;
     using Microsoft.AspNetCore.Routing;
     using Newtonsoft.Json;
 
-    [Route("api/[controller]")]
+    [Route("api/users")]
     [ApiController]
     [Produces("application/json", "application/xml")]
     public class UsersController : Controller
@@ -30,6 +31,8 @@ namespace WebApi.Controllers
 
         [HttpGet("{userId}", Name = nameof(GetUserById))]
         [HttpHead("{userId}")]
+        [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
             var user = userRepository.FindById(userId);
@@ -41,6 +44,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet(Name = "GetUsers")]
+        [ProducesResponseType(typeof(IEnumerable<UserDto>), StatusCodes.Status200OK)]
         public ActionResult<IEnumerable<UserDto>> GetUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             pageNumber = Math.Max(pageNumber, 1);
@@ -75,6 +79,10 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+
         public IActionResult CreateUser([FromBody] CreateUserDto createUserDto)
         {
             if (createUserDto == null)
@@ -100,6 +108,10 @@ namespace WebApi.Controllers
         }
 
         [HttpPut("{userId}")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] PutUserDto user)
         {
             if (user == null || userId == Guid.Empty)
@@ -126,6 +138,10 @@ namespace WebApi.Controllers
         }
 
         [HttpPatch("{userId}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public ActionResult Patch([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UpdateDto> patchDoc)
         {
             if (patchDoc == null)
@@ -155,6 +171,8 @@ namespace WebApi.Controllers
         }
 
         [HttpDelete("{userId}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult Delete([FromRoute] Guid userId)
         {
             var user = userRepository.FindById(userId);
@@ -170,6 +188,7 @@ namespace WebApi.Controllers
         }
 
         [HttpOptions]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public ActionResult Options()
         {
             Response.Headers.Add("Allow", "GET, POST, OPTIONS");
