@@ -134,7 +134,7 @@ namespace WebApi.Controllers
         }
 
         [HttpOptions]
-        public IActionResult GetOptions()
+        public IActionResult GetUsersOptions()
         {
             Response.Headers.Add("Allow", new[] { "POST", "GET", "OPTIONS" });
             return Ok();
