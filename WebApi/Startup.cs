@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
 using WebApi.Models;
+using WebApi.Samples;
 
 namespace WebApi
 {
@@ -53,6 +54,8 @@ namespace WebApi
                     cfg.CreateMap<UserToUpdateDto, UserEntity>();
                     cfg.CreateMap<UserEntity, UserToUpdateDto>();
                 }, Array.Empty<System.Reflection.Assembly>());
+            
+            services.AddSwaggerGeneration();
 
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
         }
@@ -63,6 +66,8 @@ namespace WebApi
             app.UseDeveloperExceptionPage();
 
             app.UseHttpsRedirection();
+
+            app.UseSwaggerWithUI();
 
             app.UseRouting();
             app.UseAuthorization();
