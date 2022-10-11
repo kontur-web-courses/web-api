@@ -40,19 +40,15 @@ namespace WebApi.Controllers
         [Produces("application/json", "application/xml")]
         public IActionResult CreateUser([FromBody] UserToCreateDto user)
         {
-            if (user is null)
-            {
-                return BadRequest();
-            }
-            if (!ModelState.IsValid)
-            {
-                return UnprocessableEntity(ModelState);
-            }
+            if (user is null) return BadRequest();
+            if (!ModelState.IsValid) return UnprocessableEntity(ModelState);
+
             if (!user.Login.All(char.IsLetterOrDigit))
             {
                 ModelState.AddModelError("Login", "Login should contain only letters or digits");
                 return UnprocessableEntity(ModelState);
             }
+
             var createdUserEntity = userRepository.Insert(mapper.Map<UserEntity>(user));
             return CreatedAtRoute(
                 nameof(GetUserById),
@@ -65,14 +61,9 @@ namespace WebApi.Controllers
         [Produces("application/json", "application/xml")]
         public IActionResult UpdateUser([FromRoute] Guid? userId, [FromBody] UserToUpdateDto user)
         {
-            if (user is null || userId is null)
-            {
-                return BadRequest();
-            }
-            if (!ModelState.IsValid)
-            {
-                return UnprocessableEntity(ModelState);
-            }
+            if (user is null || userId is null) return BadRequest();
+            if (!ModelState.IsValid) return UnprocessableEntity(ModelState);
+
             user.Id = userId.Value;
             userRepository.UpdateOrInsert(mapper.Map<UserEntity>(user), out var isInserted);
             return !isInserted
@@ -91,17 +82,19 @@ namespace WebApi.Controllers
             if (patchDoc is null) return BadRequest();
             var user = userRepository.FindById(userId);
             if (user is null) return NotFound();
+
             var updateDto = mapper.Map<UserToUpdateDto>(user);
             patchDoc.ApplyTo(updateDto, ModelState);
             TryValidateModel(updateDto);
             if (!ModelState.IsValid) return UnprocessableEntity(ModelState);
             var newUser = mapper.Map<UserEntity>(updateDto);
+
             userRepository.Update(newUser);
             return NoContent();
         }
 
         [HttpDelete("{userId}")]
-        public ActionResult<UserDto> DeleteUser([FromRoute] Guid userId)
+        public IActionResult DeleteUser([FromRoute] Guid userId)
         {
             var user = userRepository.FindById(userId);
             if (user is null) return NotFound();
@@ -116,13 +109,13 @@ namespace WebApi.Controllers
             pageNumber = Math.Max(1, pageNumber);
             pageSize = Math.Min(Math.Max(1, pageSize), 20);
 
-            var page = userRepository.GetPage(pageNumber, pageSize);
+            var pageList = userRepository.GetPage(pageNumber, pageSize);
 
-            string prevPageLink = page.HasPrevious
+            string prevPageLink = pageList.HasPrevious
                 ? linkGenerator.GetUriByRouteValues(HttpContext,
                     nameof(GetUsers), new { pageNumber = pageNumber - 1, pageSize })
                 : null;
-            string nextPageLink = page.HasNext
+            string nextPageLink = pageList.HasNext
                 ? linkGenerator.GetUriByRouteValues(HttpContext,
                     nameof(GetUsers), new { pageNumber = pageNumber + 1, pageSize })
                 : null;
@@ -130,18 +123,18 @@ namespace WebApi.Controllers
             {
                 PreviousPageLink = prevPageLink,
                 NextPageLink = nextPageLink,
-                TotalCount = page.TotalCount,
-                PageSize = page.PageSize,
-                CurrentPage = page.CurrentPage,
-                TotalPages = page.TotalCount,
+                TotalCount = pageList.TotalCount,
+                PageSize = pageList.PageSize,
+                CurrentPage = pageList.CurrentPage,
+                TotalPages = pageList.TotalCount,
             };
             Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(paginationHeader));
 
-            return Ok(mapper.Map<IEnumerable<UserDto>>(page));
+            return Ok(mapper.Map<IEnumerable<UserDto>>(pageList));
         }
 
         [HttpOptions]
-        public ActionResult<UserDto> GetOptions()
+        public IActionResult GetOptions()
         {
             Response.Headers.Add("Allow", new[] { "POST", "GET", "OPTIONS" });
             return Ok();
