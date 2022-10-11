@@ -47,7 +47,6 @@ namespace WebApi
                 options.RespectBrowserAcceptHeader = true;
                 
             })
-            // .ConfigureApiBehaviorOptions();
             .AddNewtonsoftJson(options =>
             {
                 options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
@@ -60,6 +59,8 @@ namespace WebApi
                     .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.LastName} {src.FirstName}"));
 
                 cfg.CreateMap<CreatedUserDto, UserEntity>();
+                cfg.CreateMap<UpdatedUserDto, UserEntity>();
+                cfg.CreateMap<UserEntity, UpdatedUserDto>();
             }, new System.Reflection.Assembly[0]);
         }
 
