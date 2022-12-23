@@ -46,7 +46,7 @@ namespace WebApi.Samples
                 // Все поля и свойства с совпадающими именами будут скопировны (поведение по умолчанию).
                 cfg.CreateMap<UserToUpdateDto, UserEntity>();
             });
-             mapper = config.CreateMapper();
+            mapper = config.CreateMapper();
         }
 
         [Test]
