@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Linq;
 using AutoMapper;
 using Game.Domain;
 using Microsoft.AspNetCore.Mvc;
+using NUnit.Framework;
 using WebApi.Models;
 
 namespace WebApi.Controllers
@@ -19,7 +21,7 @@ namespace WebApi.Controllers
             this.mapper = mapper;
         }
 
-        [HttpGet("{userId}")]
+        [HttpGet("{userId}", Name = nameof(GetUserById))]
         [Produces("application/json", "application/xml")]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
@@ -31,9 +33,25 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateUser([FromBody] object user)
+        [Produces("application/json", "application/xml")]
+        public IActionResult CreateUser([FromBody] UserToCreateDto userDto)
         {
-            throw new NotImplementedException();
+            if (userDto is null)
+                return BadRequest();
+
+            if (string.IsNullOrEmpty(userDto.Login) || !userDto.Login.All(char.IsLetterOrDigit))
+                ModelState.AddModelError("Login", "Invalid login");
+            
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+
+            var user = mapper.Map<UserEntity>(userDto);
+            var userEntity = userRepository.Insert(user);
+            
+            return CreatedAtRoute(
+                nameof(GetUserById),
+                new { userId = userEntity.Id },
+                userEntity.Id);
         }
     }
 }
