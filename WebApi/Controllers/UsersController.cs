@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json;
+using Swashbuckle.AspNetCore.Annotations;
 using WebApi.Models;
 
 namespace WebApi.Controllers
@@ -26,9 +27,15 @@ namespace WebApi.Controllers
             this.linkGenerator = linkGenerator;
         }
 
+        /// <summary>
+        /// Получить пользователя
+        /// </summary>
+        /// <param name="userId">Идентификатор пользователя</param>
         [HttpGet("{userId}", Name = nameof(GetUserById))]
         [HttpHead("{userId}")]
         [Produces("application/json", "application/xml")]
+        [SwaggerResponse(200, "OK", typeof(UserDto))]
+        [SwaggerResponse(404, "Пользователь не найден")]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
             var user = userRepository.FindById(userId);
@@ -38,8 +45,15 @@ namespace WebApi.Controllers
             return Ok(userDto);
         }
 
+        /// <summary>
+        /// Получить пользователей
+        /// </summary>
+        /// <param name="pageNumber">Номер страницы, по умолчанию 1</param>
+        /// <param name="pageSize">Размер страницы, по умолчанию 20</param>
+        /// <response code="200">OK</response>
         [HttpGet(Name = nameof(GetUsers))]
         [Produces("application/json", "application/xml")]
+        [ProducesResponseType(typeof(IEnumerable<UserDto>), 200)]
         public ActionResult<UserDto> GetUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             pageNumber = Math.Max(pageNumber, 1);
@@ -71,8 +85,27 @@ namespace WebApi.Controllers
         }
 
         
+        /// <summary>
+        /// Создать пользователя
+        /// </summary>
+        /// <remarks>
+        /// Пример запроса:
+        ///
+        ///     POST /api/users
+        ///     {
+        ///        "login": "johndoe375",
+        ///        "firstName": "John",
+        ///        "lastName": "Doe"
+        ///     }
+        ///
+        /// </remarks>
+        /// <param name="user">Данные для создания пользователя</param>
         [HttpPost]
+        [Consumes("application/json")]
         [Produces("application/json", "application/xml")]
+        [SwaggerResponse(201, "Пользователь создан")]
+        [SwaggerResponse(400, "Некорректные входные данные")]
+        [SwaggerResponse(422, "Ошибка при проверке")]
         public IActionResult CreateUser([FromBody] UserToCreateDto userDto)
         {
             if (userDto is null)
@@ -93,8 +126,18 @@ namespace WebApi.Controllers
                 userEntity.Id);
         }
 
+        /// <summary>
+        /// Обновить пользователя
+        /// </summary>
+        /// <param name="userId">Идентификатор пользователя</param>
+        /// <param name="user">Обновленные данные пользователя</param>
         [HttpPut("{userId}")]
+        [Consumes("application/json")]
         [Produces("application/json", "application/xml")]
+        [SwaggerResponse(201, "Пользователь создан")]
+        [SwaggerResponse(204, "Пользователь обновлен")]
+        [SwaggerResponse(400, "Некорректные входные данные")]
+        [SwaggerResponse(422, "Ошибка при проверке")]
         public IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] UserToUpdateDto userDto)
         {
             if (userDto is null || userId == Guid.Empty)
@@ -116,8 +159,18 @@ namespace WebApi.Controllers
                 user.Id);
         }
         
+        /// <summary>
+        /// Частично обновить пользователя
+        /// </summary>
+        /// <param name="userId">Идентификатор пользователя</param>
+        /// <param name="patchDoc">JSON Patch для пользователя</param>
         [HttpPatch("{userId}")]
+        [Consumes("application/json-patch+json")]
         [Produces("application/json", "application/xml")]
+        [SwaggerResponse(204, "Пользователь обновлен")]
+        [SwaggerResponse(400, "Некорректные входные данные")]
+        [SwaggerResponse(404, "Пользователь не найден")]
+        [SwaggerResponse(422, "Ошибка при проверке")]
         public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, 
             [FromBody] JsonPatchDocument<UserToUpdateDto> patchDoc)
         {
@@ -141,7 +194,14 @@ namespace WebApi.Controllers
             return NoContent();
         }
         
+        /// <summary>
+        /// Удалить пользователя
+        /// </summary>
+        /// <param name="userId">Идентификатор пользователя</param>
         [HttpDelete("{userId}")]
+        [Produces("application/json", "application/xml")]
+        [SwaggerResponse(204, "Пользователь удален")]
+        [SwaggerResponse(404, "Пользователь не найден")]
         public IActionResult DeleteUser([FromRoute] Guid userId)
         {
             var user = userRepository.FindById(userId);
@@ -151,7 +211,11 @@ namespace WebApi.Controllers
             return NoContent();
         }
         
+        /// <summary>
+        /// Опции по запросам о пользователях
+        /// </summary>
         [HttpOptions]
+        [SwaggerResponse(200, "OK")]
         public IActionResult GetUsersOptions()
         {
             Response.Headers.Add("Allow", "GET, POST, OPTIONS");
