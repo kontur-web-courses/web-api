@@ -50,6 +50,7 @@ namespace WebApi
                         opt => opt.MapFrom(src => $"{src.LastName} {src.FirstName}")
                     );
                 cfg.CreateMap<UserCreationDto, UserEntity>();
+                cfg.CreateMap<UserUpdateDto, UserEntity>();
             }, Array.Empty<Assembly>());
         }
 

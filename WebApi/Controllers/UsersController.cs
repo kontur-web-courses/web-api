@@ -37,18 +37,14 @@ namespace WebApi.Controllers
         public IActionResult CreateUser([FromBody] UserCreationDto userDto)
         {
             if (userDto == null)
-            {
                 return BadRequest();
-            }
 
             if (!ModelState.IsValid)
-            {
                 return UnprocessableEntity(ModelState);
-            }
 
             if (!userDto.Login.All(char.IsLetterOrDigit))
             {
-                ModelState.AddModelError("Login", "Login consists not only of letters or digits");
+                ModelState.AddModelError("Login", "Login should contain only letters or digits");
                 return UnprocessableEntity(ModelState);
             }
 
@@ -59,6 +55,27 @@ namespace WebApi.Controllers
                 nameof(GetUserById),
                 new { userId = user.Id },
                 user.Id);
+        }
+
+        [HttpPut("{userId}")]
+        [Produces("application/json", "application/xml")]
+        public IActionResult UpdateUser([FromBody] UserUpdateDto userDto, [FromRoute] Guid userId)
+        {
+            if (userDto == null || userId == Guid.Empty)
+                return BadRequest();
+
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+
+            var user = mapper.Map(userDto, new UserEntity(userId));
+            userRepository.UpdateOrInsert(user, out var isInserted);
+
+            return isInserted
+                ? CreatedAtRoute(
+                    nameof(GetUserById),
+                    new { userId = user.Id },
+                    user.Id)
+                : NoContent();
         }
     }
 }
