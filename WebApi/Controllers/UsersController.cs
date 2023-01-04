@@ -22,6 +22,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("{userId:guid}", Name = nameof(GetUserById))]
+        [HttpHead("{userId:guid}")]
         [Produces("application/json", "application/xml")]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
@@ -79,15 +80,12 @@ namespace WebApi.Controllers
                 : NoContent();
         }
 
-        [HttpPatch("{userId}")]
+        [HttpPatch("{userId:guid}")]
         [Produces("application/json", "application/xml")]
         public IActionResult PartiallyUpdateUser([FromBody] JsonPatchDocument<UserUpdateDto> patchDoc, [FromRoute] Guid userId)
         {
             if (patchDoc == null)
                 return BadRequest();
-
-            if (userId == Guid.Empty)
-                return NotFound();
 
             var user = userRepository.FindById(userId);
             if (user == null)
@@ -104,15 +102,11 @@ namespace WebApi.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{userId}")]
+        [HttpDelete("{userId:guid}")]
         [Produces("application/json", "application/xml")]
         public IActionResult DeleteUser([FromRoute] Guid userId)
         {
-            if (userId == Guid.Empty)
-                return NotFound();
-
             var user = userRepository.FindById(userId);
-
             if (user == null)
                 return NotFound();
 
