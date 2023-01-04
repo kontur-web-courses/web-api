@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
 using Game.Domain;
@@ -120,7 +121,7 @@ namespace WebApi.Controllers
 
         [HttpGet(Name = nameof(GetUsers))]
         [Produces("application/json", "application/xml")]
-        public ActionResult<UserDto> GetUsers([FromQuery] int? pageNumber, [FromQuery] int? pageSize)
+        public ActionResult<IEnumerable<UserDto>> GetUsers([FromQuery] int? pageNumber, [FromQuery] int? pageSize)
         {
             var intPageNumber = pageNumber != null
                 ? Math.Max(1, pageNumber!.Value)
@@ -153,5 +154,13 @@ namespace WebApi.Controllers
 
         private string GetUriUsers(int pageNumber, int pageSize)
             => linkGenerator.GetUriByRouteValues(HttpContext, nameof(GetUsers), new { pageSize, pageNumber });
+
+        [HttpOptions]
+        [Produces("application/json", "application/xml")]
+        public IActionResult Options()
+        {
+            Response.Headers.Add("Allow", "POST, GET, OPTIONS");
+            return Ok();
+        }
     }
 }
