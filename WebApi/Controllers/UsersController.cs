@@ -10,6 +10,7 @@ namespace WebApi.Controllers
     public class UsersController : Controller
     {
         // Чтобы ASP.NET положил что-то в userRepository требуется конфигурация
+        // git_test
         public UsersController(IUserRepository userRepository)
         {
         }
