@@ -17,7 +17,7 @@ namespace WebApi
                     // NOTE: Жесткий способ настройки, который сработает в 100% различных IDE.
                     // Для продакшена следует использовать аргументы командной строки,
                     // переменные окружения, файлы конфигурации
-                    webBuilder.UseUrls("https://localhost:5001;http://localhost:5000");
+                    webBuilder.UseUrls("https://localhost:5051;http://localhost:5050");
                     webBuilder.UseEnvironment("Development");
 
                     webBuilder.UseStartup<Startup>();
