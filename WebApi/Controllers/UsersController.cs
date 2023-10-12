@@ -10,7 +10,6 @@ namespace WebApi.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Produces("application/json", "application/xml")]
-
     public class UsersController : Controller
     {
         // Чтобы ASP.NET положил что-то в userRepository требуется конфигурация
@@ -19,8 +18,8 @@ namespace WebApi.Controllers
             this.userRepository = userRepository;
             this.mapper = mapper;
         }
-        
-        [HttpGet("{userId}", Name = nameof(GetUserById))]
+
+        [HttpGet("{userId:guid}", Name = nameof(GetUserById))]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
             if (userId == Guid.Empty)
@@ -44,20 +43,42 @@ namespace WebApi.Controllers
             {
                 return BadRequest();
             }
-            if (string.IsNullOrEmpty(userDto.Login) || userDto.Login.Any(x=>!char.IsLetterOrDigit(x)))
+
+            if (string.IsNullOrEmpty(userDto.Login) || userDto.Login.Any(x => !char.IsLetterOrDigit(x)))
             {
                 ModelState.AddModelError("Login", "ты писать н еумеешь");
             }
-            
+
             if (!ModelState.IsValid)
             {
                 return UnprocessableEntity(ModelState);
             }
-            
+
             var userEntity = mapper.Map<CreateUserDto, UserEntity>(userDto);
             var newUser = userRepository.Insert(userEntity);
+
+            return CreatedAtRoute(nameof(GetUserById), new {userId = newUser.Id}, newUser.Id);
+        }
+
+        [HttpPut("{userId:guid}", Name = nameof(GetUserById))]
+        public IActionResult UpdateUser([FromBody] UpdateUserDto? userDto, [FromRoute] Guid userId)
+        {
+            if (userDto is null)
+            {
+                return BadRequest();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                return UnprocessableEntity(ModelState);
+            }
+
+            var userEntity = mapper.Map<UpdateUserDto, UserEntity>(userDto);
+            userEntity.Id = userId;
             
-            return CreatedAtRoute(nameof(GetUserById), new { userId = newUser.Id }, newUser.Id);
+            userRepository.UpdateOrInsert(userEntity, out var isInserted);
+
+            return CreatedAtRoute(nameof(GetUserById), new {userId = userEntity.Id}, userEntity.Id);
         }
 
         private readonly IUserRepository userRepository;
