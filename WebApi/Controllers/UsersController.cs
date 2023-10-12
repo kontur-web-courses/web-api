@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using AutoMapper;
 using Game.Domain;
 using Microsoft.AspNetCore.Mvc;
@@ -32,9 +33,28 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateUser([FromBody] object user)
+        [Produces("application/json", "application/xml")]
+        public IActionResult CreateUser([FromBody] CreateUserDto user)
         {
-            throw new NotImplementedException();
+            if (user is null)
+                return BadRequest("User cannot be null");
+
+            if (string.IsNullOrEmpty(user.Login) || !user.Login.All(char.IsLetterOrDigit))
+            {
+                ModelState.AddModelError(nameof(CreateUserDto.Login),
+                    "Login should contain only letters or digits.");
+            }
+
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+
+            var userEntity = mapper.Map<UserEntity>(user);
+            var createdUserEntity = userRepository.Insert(userEntity);
+
+            return CreatedAtRoute(
+                nameof(GetUserById),
+                new { userId = createdUserEntity.Id },
+                createdUserEntity.Id);
         }
     }
 }
