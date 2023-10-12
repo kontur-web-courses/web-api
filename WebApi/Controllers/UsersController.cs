@@ -43,12 +43,12 @@ namespace WebApi.Controllers
             {
                 return BadRequest();
             }
-            
+
             if (user.Login != null && !user.Login.All(char.IsLetterOrDigit))
             {
                 ModelState.AddModelError("Login", "Логин состоит не только из букв и цифр");
             }
-            
+
             if (!ModelState.IsValid)
             {
                 return UnprocessableEntity(ModelState);
@@ -58,8 +58,31 @@ namespace WebApi.Controllers
 
             return CreatedAtRoute(
                 nameof(GetUserById),
-                new { userId = createdUserEntity.Id },
+                new {userId = createdUserEntity.Id},
                 createdUserEntity.Id);
+        }
+
+        [HttpPut("{userId}")]
+        [Produces("application/json", "application/xml")]
+        public IActionResult UpdateUser([FromRoute] Guid userId, UpdateUserDto user)
+        {
+            if (user == null || userId == Guid.Empty)
+                return BadRequest();
+            
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+
+            var userEntity = mapper.Map(user, new UserEntity(userId));
+
+            bool isInsert;
+            userRepository.UpdateOrInsert(userEntity, out isInsert);
+
+            if (isInsert)
+                return CreatedAtRoute(
+                    nameof(GetUserById),
+                    new {userId = userId},
+                    userId);
+            return NoContent();
         }
     }
 }
