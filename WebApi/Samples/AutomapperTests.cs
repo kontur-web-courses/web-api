@@ -40,13 +40,15 @@ namespace WebApi.Samples
                 // Регистрация преобразования UserEntity в UserDto с дополнительным правилом.
                 // Также поля и свойства с совпадающими именами будут скопировны (поведение по умолчанию).
                 cfg.CreateMap<UserEntity, UserDto>()
-                    .ForMember(dest => dest.VisibleName, opt => opt.MapFrom(src => src.Name ?? src.Login));
+                   .ForMember(dest => dest.VisibleName,
+                       opt
+                           => opt.MapFrom(src => src.Name ?? src.Login));
 
                 // Регистрация преобразования UserToUpdateDto в UserEntity без дополнительных правил.
                 // Все поля и свойства с совпадающими именами будут скопировны (поведение по умолчанию).
                 cfg.CreateMap<UserToUpdateDto, UserEntity>();
             });
-             mapper = config.CreateMapper();
+            mapper = config.CreateMapper();
         }
 
         [Test]
@@ -126,11 +128,11 @@ namespace WebApi.Samples
         public void TestCreateMany()
         {
             var userEntities = Enumerable.Range(1, 10)
-                .Select(id => new UserEntity
-                {
-                    Id = id
-                })
-                .ToList();
+                                         .Select(id => new UserEntity
+                                         {
+                                             Id = id
+                                         })
+                                         .ToList();
 
             // Каждый userDto создается на основе значений из userEntity.
             // Используется преобразование UserEntity в UserDto.

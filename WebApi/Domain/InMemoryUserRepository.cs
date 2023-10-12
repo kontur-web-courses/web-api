@@ -32,7 +32,7 @@ namespace Game.Domain
             return Clone(id, entity);
         }
 
-        public UserEntity FindById(Guid id)
+        public UserEntity? FindById(Guid id)
         {
             return entities.TryGetValue(id, out var entity) ? Clone(id, entity) : null;
         }
