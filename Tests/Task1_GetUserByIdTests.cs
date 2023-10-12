@@ -50,7 +50,6 @@ namespace Tests
             request.RequestUri = BuildUsersByIdUri("trash");
             request.Headers.Add("Accept", "application/json");
             var response = httpClient.Send(request);
-
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
             response.ShouldNotHaveHeader("Content-Type");
         }

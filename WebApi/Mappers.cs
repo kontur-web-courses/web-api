@@ -12,5 +12,6 @@ public class Mappers : Profile
             .ForMember(dest => dest.FullName,
                 opt
                     => opt.MapFrom(src => $"{src.LastName} {src.FirstName}"));
+        CreateMap<CreateUserDto, UserEntity>();
     }
 }
