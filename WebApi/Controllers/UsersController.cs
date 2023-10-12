@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using AutoMapper;
 using Game.Domain;
 using Microsoft.AspNetCore.Mvc;
@@ -20,7 +21,7 @@ namespace WebApi.Controllers
             this.mapper = mapper;
         }
 
-        [HttpGet("{userId}")]
+        [HttpGet("{userId}", Name = nameof(GetUserById))]
         [Produces("application/json", "application/xml")]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
@@ -31,9 +32,23 @@ namespace WebApi.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateUser([FromBody] object user)
+        [Produces("application/json", "application/xml")]
+        public IActionResult CreateUser([FromBody] CreateUserDto createUserDto)
         {
-            throw new NotImplementedException();
+            if (createUserDto is null)
+                return BadRequest();
+
+            if (createUserDto.Login is not null && !createUserDto.Login.All(char.IsLetterOrDigit))
+                ModelState.AddModelError("Login", "Логин должен состоять только из символов и цифр");
+
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+
+            var user = userRepository.Insert(mapper.Map<UserEntity>(createUserDto));
+            return CreatedAtRoute(
+                nameof(GetUserById),
+                new { userId = user.Id },
+                user.Id);
         }
     }
 }
