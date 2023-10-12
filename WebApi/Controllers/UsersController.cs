@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using AutoMapper;
 using Game.Domain;
 using Microsoft.AspNetCore.Mvc;
@@ -13,14 +14,13 @@ namespace WebApi.Controllers
         private readonly IUserRepository userRepository;
         private readonly IMapper mapper;
 
-        // Чтобы ASP.NET положил что-то в userRepository требуется конфигурация
         public UsersController(IUserRepository userRepository, IMapper mapper)
         {
             this.userRepository = userRepository;
             this.mapper = mapper;
         }
 
-        [HttpGet("{userId}")]
+        [HttpGet("{userId}", Name = nameof(GetUserById))]
         [Produces("application/json", "application/xml")]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
@@ -31,14 +31,35 @@ namespace WebApi.Controllers
             }
 
             var userDto = mapper.Map<UserDto>(user);
-            
+
             return Ok(userDto);
         }
 
         [HttpPost]
-        public IActionResult CreateUser([FromBody] object user)
+        [Produces("application/json", "application/xml")]
+        public IActionResult CreateUser([FromBody] UserToCreateDto user)
         {
-            throw new NotImplementedException();
+            if (user == null)
+            {
+                return BadRequest();
+            }
+            
+            if (user.Login != null && !user.Login.All(char.IsLetterOrDigit))
+            {
+                ModelState.AddModelError("Login", "Логин состоит не только из букв и цифр");
+            }
+            
+            if (!ModelState.IsValid)
+            {
+                return UnprocessableEntity(ModelState);
+            }
+
+            var createdUserEntity = userRepository.Insert(mapper.Map<UserEntity>(user));
+
+            return CreatedAtRoute(
+                nameof(GetUserById),
+                new { userId = createdUserEntity.Id },
+                createdUserEntity.Id);
         }
     }
 }

@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using WebApi.Models;
 using WebApi.Samples;
 
@@ -38,19 +40,19 @@ namespace WebApi
                 {
                     options.SuppressModelStateInvalidFilter = true;
                     options.SuppressMapClientErrors = true;
+                })
+                .AddNewtonsoftJson(options =>
+                {
+                    options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                    options.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Populate;
                 });
 
             services.AddAutoMapper(cfg =>
             {
-                // Регистрация преобразования UserEntity в UserDto с дополнительным правилом.
-                // Также поля и свойства с совпадающими именами будут скопировны (поведение по умолчанию).
                 cfg.CreateMap<UserEntity, UserDto>()
                     .ForMember(dto => dto.FullName,
                         opt => opt.MapFrom(entity => $"{entity.FirstName} {entity.LastName}"));
-
-                // // Регистрация преобразования UserToUpdateDto в UserEntity без дополнительных правил.
-                // // Все поля и свойства с совпадающими именами будут скопировны (поведение по умолчанию).
-                // cfg.CreateMap<UserToUpdateDto, UserEntity>();
+                cfg.CreateMap<UserToCreateDto, UserEntity>();
             }, Array.Empty<Assembly>());
 
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
