@@ -1,3 +1,5 @@
+using System;
+using System.Reflection;
 using AutoMapper;
 using Game.Domain;
 using Microsoft.AspNetCore.Builder;
@@ -39,7 +41,7 @@ namespace WebApi
                     .ForMember(d => d.FullName, 
                         opt 
                             => opt.MapFrom(src => $"{src.LastName} {src.FirstName}"));
-            });
+            }, Array.Empty<Assembly>());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
