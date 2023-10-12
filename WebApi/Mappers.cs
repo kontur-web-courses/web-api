@@ -13,6 +13,6 @@ public class Mappers : Profile
                 opt
                     => opt.MapFrom(src => $"{src.LastName} {src.FirstName}"));
         CreateMap<CreateUserDto, UserEntity>();
-        CreateMap<UpdateUserDto, UserEntity>();
+        CreateMap<UpdateUserDto, UserEntity>().ReverseMap();
     }
 }
