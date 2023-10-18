@@ -11,5 +11,6 @@ namespace Game.Domain
         void UpdateOrInsert(UserEntity user, out bool isInserted);
         void Delete(Guid id);
         PageList<UserEntity> GetPage(int pageNumber, int pageSize);
+        int UsersCount { get; }
     }
 }

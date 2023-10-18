@@ -92,6 +92,8 @@ namespace Game.Domain
             return new PageList<UserEntity>(items, count, pageNumber, pageSize);
         }
 
+        public int UsersCount => entities.Count;
+
         private UserEntity Clone(Guid id, UserEntity user)
         {
             return new UserEntity(id, user.Login, user.LastName, user.FirstName, user.GamesPlayed, user.CurrentGameId);
