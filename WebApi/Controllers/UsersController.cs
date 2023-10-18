@@ -85,5 +85,15 @@ namespace WebApi.Controllers
             userRepository.Update(mapper.Map<UserEntity>(updateDto));
             return NoContent();
         }
+
+        [HttpDelete("{userId}")]
+        [Produces("application/json", "application/xml")]
+        public IActionResult DeleteUser([FromRoute] Guid userId)
+        {
+            if (userRepository.FindById(userId) is null)
+                return NotFound();
+            userRepository.Delete(userId);
+            return NoContent();
+        }
     }
 }
