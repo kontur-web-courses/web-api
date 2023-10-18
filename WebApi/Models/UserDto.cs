@@ -2,6 +2,7 @@ using System;
 
 namespace WebApi.Models
 {
+    
     public class UserDto
     { 
         public Guid Id { get; set; }
