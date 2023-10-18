@@ -32,22 +32,41 @@ namespace WebApi.Controllers
 
         [HttpPost]
         [Produces("application/json", "application/xml")]
-        public IActionResult CreateUser([FromBody] DtoCreation userDto)
+        public IActionResult CreateUser([FromBody] CreateDto userCreateDto)
         {
-            if (userDto is null) return BadRequest();
+            if (userCreateDto is null) return BadRequest();
             if (!ModelState.IsValid) return UnprocessableEntity(ModelState);
-            if (!userDto.Login.All(char.IsLetterOrDigit))
+            if (!userCreateDto.Login.All(char.IsLetterOrDigit))
             {
                 ModelState.AddModelError("Login", "Login should contain only letters or digits");
                 return UnprocessableEntity(ModelState);
             }
 
-            var userEntity = mapper.Map<UserEntity>(userDto);
+            var userEntity = mapper.Map<UserEntity>(userCreateDto);
             userEntity = userRepository.Insert(userEntity);
             return CreatedAtRoute(
                 nameof(GetUserById),
                 new {userId = userEntity.Id},
                 userEntity.Id);
+        }
+
+        [HttpPut("{userId}")]
+        [Produces("application/json", "application/xml")]
+        public IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] UpdateDto userUpdateDto)
+        {
+            if (userUpdateDto is null || userId == Guid.Empty)
+                return BadRequest();
+            if (!ModelState.IsValid) return UnprocessableEntity(ModelState);
+            
+            var userEntity = new UserEntity(userId);
+            mapper.Map(userUpdateDto, userEntity);
+            userRepository.UpdateOrInsert(userEntity, out var isInserted);
+            return !isInserted
+                ? NoContent()
+                : CreatedAtRoute(
+                    nameof(GetUserById),
+                    new {userId = userEntity.Id},
+                    userEntity.Id);
         }
     }
 }
