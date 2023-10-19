@@ -24,13 +24,14 @@ namespace WebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-           // services.AddSwaggerGeneration();
+            services.AddSwaggerGeneration();
             services.AddAutoMapper(cfg =>
             {
                 cfg.CreateMap<UserEntity, UserDto>()
                     .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.LastName} {src.FirstName}"));
 
                 cfg.CreateMap<NewUserData, UserEntity>();
+                cfg.CreateMap<UpdatingUserData, UserEntity>();
             }, new System.Reflection.Assembly[0]);
             services.AddSingleton<IUserRepository, InMemoryUserRepository>();
             services.AddControllers(options =>
@@ -64,7 +65,7 @@ namespace WebApi
 
             app.UseRouting();
             app.UseAuthorization();
-            //app.UseSwaggerWithUI();
+            app.UseSwaggerWithUI();
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
         }
     }
