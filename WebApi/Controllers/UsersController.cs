@@ -2,6 +2,7 @@
 using System.Linq;
 using AutoMapper;
 using Game.Domain;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Models;
 
@@ -96,5 +97,31 @@ namespace WebApi.Controllers
 
             return NoContent();
         }
+
+        [HttpPatch("{userId}")]
+        [Produces("application/json", "application/xml")]
+        public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UpdateUserDto> patchDoc)
+        {
+            if (patchDoc == null)
+                return BadRequest();
+            
+            var user = userRepository.FindById(userId);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var updateUserDto = mapper.Map<UpdateUserDto>(user);
+            
+            patchDoc.ApplyTo(updateUserDto, ModelState);
+
+            TryValidateModel(updateUserDto);
+            
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+
+            return NoContent();
+        }
+        
     }
 }
