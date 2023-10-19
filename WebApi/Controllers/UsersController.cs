@@ -140,5 +140,13 @@ namespace WebApi.Controllers
             Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(paginationHeader));
             return Ok(paginationHeader);
         }
+
+        [HttpOptions]
+        [Produces("application/json", "application/xml")]
+        public ActionResult<UserDto> GetOptions()
+        {
+            Response.Headers.Add("Allow", "POST, GET, OPTIONS");
+            return Ok();
+        }
     }
 }
