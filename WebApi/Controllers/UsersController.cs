@@ -25,6 +25,7 @@ namespace WebApi.Controllers
             
         [Produces("application/json", "application/xml")]
         [HttpGet("{userId}", Name = nameof(GetUserById))]
+        [HttpHead("{userId}")]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
             var user = _userRepository.FindById(userId);
@@ -121,5 +122,20 @@ namespace WebApi.Controllers
             _userRepository.Delete(userId);
             return NoContent();
         }
+        
+        // [Produces("application/json", "application/xml")]
+        // [HttpHead("{userId}")]
+        // public IActionResult DeleteUser([FromRoute] Guid userId)
+        // {
+        //     var userEntity = _userRepository.FindById(userId);
+        //     
+        //     if (userEntity is null)
+        //     {
+        //         return NotFound();
+        //     }
+        //     
+        //     _userRepository.Delete(userId);
+        //     return NoContent();
+        // }
     }
 }
