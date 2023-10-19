@@ -122,6 +122,14 @@ namespace WebApi.Controllers
 
             return NoContent();
         }
-        
+
+
+        [HttpOptions]
+        public IActionResult GetAllMethods()
+        {
+            Response.Headers.Add("Allow", new []{"GET", "POST", "OPTIONS"});
+
+            return Ok();
+        }
     }
 }
