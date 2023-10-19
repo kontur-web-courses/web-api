@@ -1,9 +1,17 @@
-﻿namespace WebApi.Models
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+
+namespace WebApi.Models
 {
     public class NewUserData
     {
-        public string Login;
-        public string FirstName;
-        public string LastName;
+        [Required]
+        public string Login { get; set; }
+
+        [DefaultValue("John")]
+        public string FirstName { get; set; }
+
+        [DefaultValue("Doe")]
+        public string LastName { get; set; }
     }
 }
