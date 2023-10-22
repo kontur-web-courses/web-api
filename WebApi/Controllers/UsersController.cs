@@ -25,16 +25,12 @@ namespace WebApi.Controllers
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
             if (userId == Guid.Empty)
-            {
                 return NotFound();
-            }
             
             var user = userRepository.FindById(userId);
 
             if (user is null)
-            {
                 return NotFound();
-            }
             
             return Ok(mapper.Map<UserEntity, UserDto>(user));
         }
@@ -43,19 +39,13 @@ namespace WebApi.Controllers
         public IActionResult CreateUser([FromBody] CreateUserDto user)
         {
             if (user is null)
-            {
                 return BadRequest();
-            }
 
             if (string.IsNullOrEmpty(user.Login) || user.Login.Any(c => !char.IsLetterOrDigit(c)))
-            {
-                ModelState.AddModelError("Login", "Логин должен состоять только из цифр и букв");
-            }
+                ModelState.AddModelError("Login", "Login should contain only letters or digits");
 
             if (!ModelState.IsValid)
-            {
                 return UnprocessableEntity(ModelState);
-            }
             
             var createdUserEntity = userRepository.Insert(
                 mapper.Map<CreateUserDto, UserEntity>(user)
@@ -65,6 +55,28 @@ namespace WebApi.Controllers
                 nameof(GetUserById),
                 new { userId = createdUserEntity.Id },
                 createdUserEntity.Id);
+        }
+
+        [HttpPut("{userId}")]
+        public IActionResult UpdateUser([FromBody] UpdateUserDto user, [FromRoute] Guid userId)
+        {
+            if (user is null || userId == Guid.Empty)
+                return BadRequest();
+            
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+
+            var userEntity = mapper.Map(user, new UserEntity(userId));
+            
+            userRepository.UpdateOrInsert(userEntity, out var isInserted);
+
+            if (!isInserted)
+                return NoContent();
+
+            return CreatedAtRoute(
+                nameof(GetUserById),
+                new { userId },
+                userId);;
         }
     }
 }

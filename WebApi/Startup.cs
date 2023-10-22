@@ -36,6 +36,7 @@ namespace WebApi
                     opt => opt.MapFrom(src => $"{src.LastName} {src.FirstName}")
                 );
                 cfg.CreateMap<CreateUserDto, UserEntity>();
+                cfg.CreateMap<UpdateUserDto, UserEntity>();
             }, Array.Empty<Assembly>());
 
             services.AddControllers(options =>
