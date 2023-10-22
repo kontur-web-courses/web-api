@@ -154,5 +154,12 @@ namespace WebApi.Controllers
         {
             return linkGenerator.GetUriByRouteValues(HttpContext, nameof(GetUsers), new { pageSize, pageNumber });
         }
+
+        [HttpOptions]
+        public IActionResult GetAllowedMethods()
+        {
+            Response.Headers.Add("Allow", "POST,GET,OPTIONS");
+            return Ok();
+        }
     }
 }
