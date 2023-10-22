@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
@@ -19,7 +20,7 @@ namespace WebApi
                     // переменные окружения, файлы конфигурации
                     webBuilder.UseUrls("https://localhost:5001;http://localhost:5000");
                     webBuilder.UseEnvironment("Development");
-
+                    
                     webBuilder.UseStartup<Startup>();
                 });
     }
