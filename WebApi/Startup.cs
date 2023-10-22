@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using WebApi.Models;
 
 namespace WebApi
@@ -33,17 +35,24 @@ namespace WebApi
                     dest => dest.FullName,
                     opt => opt.MapFrom(src => $"{src.LastName} {src.FirstName}")
                 );
+                cfg.CreateMap<CreateUserDto, UserEntity>();
             }, Array.Empty<Assembly>());
-            
+
             services.AddControllers(options =>
                 {
                     options.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
                     options.ReturnHttpNotAcceptable = true;
                     options.RespectBrowserAcceptHeader = true;
                 })
-                .ConfigureApiBehaviorOptions(options => {
+                .ConfigureApiBehaviorOptions(options =>
+                {
                     options.SuppressModelStateInvalidFilter = true;
                     options.SuppressMapClientErrors = true;
+                })
+                .AddNewtonsoftJson(options =>
+                {
+                    options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                    options.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Populate;
                 });
         }
 
