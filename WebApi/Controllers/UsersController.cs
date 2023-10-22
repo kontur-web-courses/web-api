@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using AutoMapper;
 using Game.Domain;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
-using Newtonsoft.Json;
 using WebApi.Models;
 
 namespace WebApi.Controllers
@@ -133,60 +133,44 @@ namespace WebApi.Controllers
         [HttpGet]
         public IActionResult GetUsers([FromQuery] int pageSize = 10, [FromQuery] int pageNumber = 1)
         {
+            pageSize = Math.Max(Math.Min(pageSize, 20), 1);
+            pageNumber = Math.Max(pageNumber, 1);
+
             var pageList = userRepository.GetPage(pageNumber, pageSize);
             var users = mapper.Map<IEnumerable<UserDto>>(pageList);
+            var totalPages = (int) Math.Ceiling((double) userRepository.UsersCount / pageSize);
 
-            var totalPages = userRepository.UsersCount % pageSize == 0
-                ? userRepository.UsersCount / pageSize
-                : userRepository.UsersCount / pageSize + 1;
-            if (pageSize is > 20 or < 1 || pageNumber < 1 || pageNumber > totalPages)
-                return BadRequest();
-
-
-            var paginationHeader = CreatePaginationHeader(pageSize,
-                pageNumber,
-                totalPages);
-
-            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(paginationHeader));
+            var paginationHeader = CreatePaginationHeader(pageSize, pageNumber, totalPages);
+            Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationHeader));
+            
             return Ok(users);
         }
 
-        private Dictionary<string, string?> CreatePaginationHeader(int pageSize, int pageNumber, int totalPages)
+        private object CreatePaginationHeader(int pageSize, int pageNumber, int totalPages)
         {
-            var paginationHeader = new Dictionary<string, string?>()
-            {
-                {"totalCount", userRepository.UsersCount.ToString()},
-                {"pageSize", pageSize.ToString()},
-                {"currentPage", pageNumber.ToString()},
-                {"totalPages", totalPages.ToString()},
-            };
-
             var nextPageNumber = pageNumber + 1;
             var previousPageNumber = pageNumber - 1;
-            
-            if (previousPageNumber >= 1)
-            {
-                var previousPageLink = linkGenerator.GetUriByRouteValues(HttpContext,
-                    "users",
-                    new {pageNumber = pageNumber - 1, pageSize});
-                paginationHeader["previousPageLink"] = previousPageLink;
-            }
 
-            if (nextPageNumber <= totalPages)
+            return new
             {
-                var nextPageLink = linkGenerator.GetUriByRouteValues(HttpContext,
-                    "users",
-                    new {pageNumber = pageNumber + 1, pageSize});
-                paginationHeader["nextPageLink"] = nextPageLink;
-            }
+                previousPageLink = previousPageNumber >= 1 ? GetUriByRouteValues(pageSize, previousPageNumber) : null,
+                nextPageLink = nextPageNumber <= totalPages ? GetUriByRouteValues(nextPageNumber, pageSize) : null,
+                totalCount = userRepository.UsersCount.ToString(),
+                pageSize = pageSize.ToString(),
+                currentPage = pageNumber.ToString(),
+                totalPages = totalPages.ToString(),
+            };
+        }
 
-            return paginationHeader;
+        private string? GetUriByRouteValues(int pageSize, int previousPageNumber)
+        {
+            return linkGenerator.GetUriByRouteValues(HttpContext, null, new {pageNumber = previousPageNumber, pageSize});
         }
 
         [HttpOptions]
         public IActionResult GetAllowed()
         {
-            Response.Headers.Add("Allowed", string.Join(',', "POST", "GET", "OPTIONS"));
+            Response.Headers.Add("Allow", string.Join(',', "POST", "GET", "OPTIONS"));
             return Ok();
         }
 
