@@ -32,7 +32,7 @@ namespace Game.Domain
             return Clone(id, entity);
         }
 
-        public UserEntity FindById(Guid id)
+        public UserEntity? FindById(Guid id)
         {
             return entities.TryGetValue(id, out var entity) ? Clone(id, entity) : null;
         }
@@ -91,6 +91,8 @@ namespace Game.Domain
                 .ToList();
             return new PageList<UserEntity>(items, count, pageNumber, pageSize);
         }
+
+        public int UsersCount => entities.Count;
 
         private UserEntity Clone(Guid id, UserEntity user)
         {

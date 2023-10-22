@@ -28,7 +28,7 @@ namespace Game.Domain
         {
             get;
             // ReSharper disable once AutoPropertyCanBeMadeGetOnly.Local For MongoDB
-            private set;
+            set;
         }
 
         /// <summary>
