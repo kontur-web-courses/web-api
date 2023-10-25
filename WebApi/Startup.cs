@@ -1,7 +1,13 @@
+using AutoMapper;
+using Game.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using WebApi.Models;
 
 namespace WebApi
 {
@@ -17,11 +23,33 @@ namespace WebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers()
-                .ConfigureApiBehaviorOptions(options => {
+            services.AddControllers(options =>
+                {
+                    options.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
+                    options.ReturnHttpNotAcceptable = true;
+                    options.RespectBrowserAcceptHeader = true;
+                })
+                .ConfigureApiBehaviorOptions(options =>
+                {
                     options.SuppressModelStateInvalidFilter = true;
                     options.SuppressMapClientErrors = true;
+                })
+                .AddNewtonsoftJson(options =>
+                {
+                    options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                    options.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Populate;
                 });
+            services.AddAutoMapper(cfg =>
+            {
+                cfg.CreateMap<UserEntity, UserDto>()
+                    .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.LastName} {src.FirstName}"));
+            }, new System.Reflection.Assembly[0]);
+            services.AddAutoMapper(cfg => { cfg.CreateMap<CreateUserDto, UserEntity>(); }, new System.Reflection.Assembly[0]);
+            services.AddAutoMapper(cfg => { cfg.CreateMap<PutUserDto, UserEntity>(); }, new System.Reflection.Assembly[0]);
+            services.AddAutoMapper(cfg => { cfg.CreateMap<PatchUserDto, UserEntity>(); }, new System.Reflection.Assembly[0]);
+            services.AddAutoMapper(cfg => { cfg.CreateMap<UserEntity, PatchUserDto>(); }, new System.Reflection.Assembly[0]);
+
+            services.AddSingleton<IUserRepository, InMemoryUserRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -33,10 +61,7 @@ namespace WebApi
 
             app.UseRouting();
             app.UseAuthorization();
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
         }
     }
 }
