@@ -1,5 +1,4 @@
-﻿using System;
-using Game.Domain;
+﻿using Game.Domain;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Models;
 
