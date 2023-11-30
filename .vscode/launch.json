@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build Solution",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/WebApi/bin/Debug/net5.0/WebApi.dll",
+            "program": "${workspaceFolder}/WebApi.MinimapApi/bin/Debug/net8.0/WebApi.MinimapApi.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             "stopAtEntry": false,
