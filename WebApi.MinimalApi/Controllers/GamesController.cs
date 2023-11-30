@@ -1,10 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace WebApi.MinimalApi.Controllers
+namespace WebApi.MinimalApi.Controllers;
+
+[ApiController]
+public class GamesController : Controller
 {
-    [ApiController]
-    public class GamesController : Controller
-    {
-        // TODO
-    }
+    // TODO
 }
