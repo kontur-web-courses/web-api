@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.Swagger.Annotations;
-using WebApi.Models;
+using WebApi.MinimalApi.Models;
 
-namespace WebApi.Samples
+namespace WebApi.MinimalApi.Samples
 {
     public interface ISwaggerDescriptionsForUsersController
     {

@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-
-namespace Game.Domain
+namespace WebApi.MinimalApi.Domain
 {
     public class PageList<T> : List<T>
     {

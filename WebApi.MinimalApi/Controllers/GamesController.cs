@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace WebApi.Controllers
+namespace WebApi.MinimalApi.Controllers
 {
     [ApiController]
     public class GamesController : Controller

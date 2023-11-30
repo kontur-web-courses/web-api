@@ -3,7 +3,7 @@ using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using Swashbuckle.AspNetCore.Swagger;
 
-namespace WebApi.Samples
+namespace WebApi.MinimalApi.Samples
 {
     public static class SwaggerExtensions
     {

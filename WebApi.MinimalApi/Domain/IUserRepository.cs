@@ -1,6 +1,4 @@
-using System;
-
-namespace Game.Domain
+namespace WebApi.MinimalApi.Domain
 {
     public interface IUserRepository
     {

@@ -1,10 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using AutoMapper;
 using NUnit.Framework;
 
-namespace WebApi.Samples
+namespace WebApi.MinimalApi.Samples
 {
     [TestFixture]
     public class AutoMapperTests

@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Game.Domain
+namespace WebApi.MinimalApi.Domain
 {
     public class InMemoryUserRepository : IUserRepository
     {

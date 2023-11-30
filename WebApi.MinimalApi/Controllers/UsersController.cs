@@ -1,8 +1,8 @@
-﻿using Game.Domain;
-using Microsoft.AspNetCore.Mvc;
-using WebApi.Models;
+﻿using Microsoft.AspNetCore.Mvc;
+using WebApi.MinimalApi.Domain;
+using WebApi.MinimalApi.Models;
 
-namespace WebApi.Controllers
+namespace WebApi.MinimalApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

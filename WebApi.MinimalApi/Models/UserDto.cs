@@ -1,6 +1,4 @@
-using System;
-
-namespace WebApi.Models
+namespace WebApi.MinimalApi.Models
 {
     public class UserDto
     { 
