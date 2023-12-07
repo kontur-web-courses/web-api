@@ -25,4 +25,10 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Samples\GameApi.postman_collection.json" />
+    <_ContentIncludedByDefault Remove="Samples\UsersApi.postman_collection.json" />
+    <_ContentIncludedByDefault Remove="Samples\ValuesApi.postman_collection.json" />
+  </ItemGroup>
+
 </Project>
