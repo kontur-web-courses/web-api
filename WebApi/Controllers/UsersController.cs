@@ -24,6 +24,7 @@ namespace WebApi.Controllers
         }
 
         [HttpGet("{userId:guid}", Name = nameof(GetUserById))]
+        [HttpHead("{userId}")]
         [Produces("application/json", "application/xml")]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
