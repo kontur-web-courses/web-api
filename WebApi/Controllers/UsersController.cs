@@ -83,5 +83,29 @@ namespace WebApi.Controllers
                     userEntity.Id) 
                 : NoContent();
         }
+        
+        [HttpPatch("{userId}")]
+        [Produces("application/json", "application/xml")]
+        public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UpdateUserDto> patchDoc)
+        {
+            if (patchDoc is null)
+                return BadRequest();
+
+            var userEntity = users.FindById(userId);
+            if (userEntity is null)
+                return NotFound();
+
+            var updateDto = mapper.Map<UpdateUserDto>(userEntity);
+            patchDoc.ApplyTo(updateDto, ModelState);
+            
+            TryValidateModel(updateDto);
+            if (!ModelState.IsValid)
+                return UnprocessableEntity(ModelState);
+            
+            mapper.Map(updateDto, userEntity);
+            users.Update(userEntity);
+
+            return NoContent();
+        }
     }
 }
