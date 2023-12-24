@@ -152,6 +152,13 @@ namespace WebApi.Controllers
             return Ok(page);
         }
         
+        [HttpOptions]
+        public IActionResult GetUsersOptions()
+        {
+            Response.Headers.Add("Allow", "POST,GET,OPTIONS");
+            return Ok();
+        }
+        
         private string CreateGetUsersUri(int pageNumber, int pageSize) 
             => linkGenerator.GetUriByRouteValues(HttpContext, nameof(GetUsers), 
                 new 
