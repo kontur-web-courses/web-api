@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -6,6 +7,8 @@ using AutoMapper;
 using Game.Domain;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
+using Newtonsoft.Json;
 using WebApi.Models;
 
 namespace WebApi.Controllers
@@ -14,13 +17,15 @@ namespace WebApi.Controllers
     [ApiController]
     public class UsersController : Controller
     {
-        private readonly IUserRepository users;
+        private readonly IUserRepository usersRepository;
         private readonly IMapper mapper;
+        private readonly LinkGenerator linkGenerator;
 
-        public UsersController(IUserRepository users, IMapper mapper)
+        public UsersController(IUserRepository usersRepository, IMapper mapper, LinkGenerator linkGenerator)
         {
-            this.users = users;
+            this.usersRepository = usersRepository;
             this.mapper = mapper;
+            this.linkGenerator = linkGenerator;
         }
 
         [HttpGet("{userId:guid}", Name = nameof(GetUserById))]
@@ -28,7 +33,7 @@ namespace WebApi.Controllers
         [Produces("application/json", "application/xml")]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
-            var user = users.FindById(userId);
+            var user = usersRepository.FindById(userId);
             if (user is null)
                 return NotFound();
 
@@ -53,7 +58,7 @@ namespace WebApi.Controllers
                 return UnprocessableEntity(ModelState);
 
             var userEntity = mapper.Map<UserEntity>(user);
-            var createdUserEntity = users.Insert(userEntity);
+            var createdUserEntity = usersRepository.Insert(userEntity);
             var response = CreatedAtRoute(
                 nameof(GetUserById),
                 new {userId = createdUserEntity.Id},
@@ -75,7 +80,7 @@ namespace WebApi.Controllers
             var userEntity = new UserEntity(userId);
             mapper.Map(user, userEntity);
             
-            users.UpdateOrInsert(userEntity, out var isInserted);
+            usersRepository.UpdateOrInsert(userEntity, out var isInserted);
             
             return isInserted 
                 ? CreatedAtRoute(
@@ -92,7 +97,7 @@ namespace WebApi.Controllers
             if (patchDoc is null)
                 return BadRequest();
 
-            var userEntity = users.FindById(userId);
+            var userEntity = usersRepository.FindById(userId);
             if (userEntity is null)
                 return NotFound();
 
@@ -104,7 +109,7 @@ namespace WebApi.Controllers
                 return UnprocessableEntity(ModelState);
             
             mapper.Map(updateDto, userEntity);
-            users.Update(userEntity);
+            usersRepository.Update(userEntity);
 
             return NoContent();
         }
@@ -113,12 +118,46 @@ namespace WebApi.Controllers
         [Produces("application/json", "application/xml")]
         public IActionResult DeleteUser([FromRoute] Guid userId)
         {
-            var user = users.FindById(userId);
+            var user = usersRepository.FindById(userId);
             if (user is null)
                 return NotFound();
             
-            users.Delete(userId);
+            usersRepository.Delete(userId);
             return NoContent();
         }
+
+        [HttpGet(Name = nameof(GetUsers))]
+        [Produces("application/json", "application/xml")]
+        public ActionResult<IEnumerable<UserDto>> GetUsers(int pageNumber = 1, int pageSize = 10)
+        {
+            pageNumber = Math.Max(pageNumber, 1);
+            pageSize = Math.Min(Math.Max(pageSize, 1), 20);
+            var page = usersRepository.GetPage(pageNumber, pageSize);
+            
+            var paginationHeader = new
+            {
+                previousPageLink = page.HasPrevious
+                    ? CreateGetUsersUri(page.CurrentPage - 1, page.PageSize)
+                    : null,
+                nextPageLink = page.HasNext
+                    ? CreateGetUsersUri(page.CurrentPage + 1, page.PageSize)
+                    : null,
+                totalCount = page.TotalCount,
+                pageSize = page.PageSize,
+                currentPage = page.CurrentPage,
+                totalPages = page.TotalPages 
+            };
+            Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(paginationHeader));
+            
+            return Ok(page);
+        }
+        
+        private string CreateGetUsersUri(int pageNumber, int pageSize) 
+            => linkGenerator.GetUriByRouteValues(HttpContext, nameof(GetUsers), 
+                new 
+                {
+                    pageNumber,
+                    pageSize
+                });
     }
 }
