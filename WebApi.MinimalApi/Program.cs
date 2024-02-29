@@ -1,7 +1,10 @@
 var builder = WebApplication.CreateBuilder(args);
-builder.WebHost.UseUrls("https://localhost:5001;http://localhost:5000");
-builder.WebHost.UseEnvironment("Development");
-builder.Services.AddControllers();
+builder.WebHost.UseUrls("http://localhost:5000");
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options => {
+        options.SuppressModelStateInvalidFilter = true;
+        options.SuppressMapClientErrors = true;
+    });
 
 var app = builder.Build();
 

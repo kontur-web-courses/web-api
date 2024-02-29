@@ -37,9 +37,9 @@
 
 Для начала тебе потребуется получить `IUserRepository` через конструктор.
 Чтобы DI-контейнер ASP.NET смог создать `IUserRepository`,
-привяжи к этому интерфейсу `InMemoryUserRepository` в `Startup.ConfigureServices`:
+привяжи к этому интерфейсу `InMemoryUserRepository` в `Program`:
 ```cs
-services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
 ```
 
 Получи нужного пользователя из репозитория и верни его.
@@ -59,10 +59,10 @@ return Ok(user);
 Но в каком представлении API будет возвращать ресурсы? Это зависит от заголовка `Accept`.
 Сейчас API возвращать данные только формате `JSON`. Надо добавить `XML`.
 Все другие представления результатов можно запретить и возвращать 406 Not Acceptable.
-Для этого достаточно немного настроить MVC в `Startup.ConfigureServices`:
+Для этого достаточно немного настроить MVC в `Program`:
 
 ```cs
-services.AddControllers(options =>
+builder.Services.AddControllers(options =>
 {
     // Этот OutputFormatter позволяет возвращать данные в XML, если требуется.
     options.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
@@ -90,9 +90,9 @@ services.AddControllers(options =>
 И средство для этого есть — `AutoMapper`.
 
 Перед тем как использовать, его нужно сконфигурировать и привязать к DI-контейнеру ASP.NET.
-Для этого добавь в `Startup.ConfigureServices` следующий код:
+Для этого добавь в `Program` следующий код:
 ```cs
-services.AddAutoMapper(cfg =>
+builder.Services.AddAutoMapper(cfg =>
 {
     // TODO
 }, new System.Reflection.Assembly[0]);
