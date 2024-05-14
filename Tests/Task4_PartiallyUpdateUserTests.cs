@@ -4,6 +4,7 @@ using NUnit.Framework;
 using System;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace Tests
 {
@@ -12,9 +13,9 @@ namespace Tests
     public class Task4_PartiallyUpdateUserTests : UsersApiTestsBase
     {
         [Test]
-        public void Test1_Code204_WhenAllIsFine()
+        public async Task Test1_Code204_WhenAllIsFine()
         {
-            var createdUserId = CreateUser(new
+            var createdUserId = await CreateUser(new
             {
                 login = "anonymous"
             });
@@ -40,7 +41,7 @@ namespace Tests
                     value = "V"
                 }
             }.SerializeToJsonContent("application/json-patch+json");
-            var response = httpClient.Send(request);
+            var response = await HttpClient.SendAsync(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.NoContent);
             response.ShouldNotHaveHeader("Content-Type");
@@ -56,7 +57,7 @@ namespace Tests
         }
 
         [Test]
-        public void Test2_Code404_WhenNoUser()
+        public async Task Test2_Code404_WhenNoUser()
         {
             var updatingUserId = Guid.NewGuid().ToString();
 
@@ -81,14 +82,14 @@ namespace Tests
                     value = "V"
                 }
             }.SerializeToJsonContent("application/json-patch+json");
-            var response = httpClient.Send(request);
+            var response = await HttpClient.SendAsync(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
             response.ShouldNotHaveHeader("Content-Type");
         }
 
         [Test]
-        public void Test3_Code404_WhenUserIdIsTrash()
+        public async Task Test3_Code404_WhenUserIdIsTrash()
         {
             var request = new HttpRequestMessage();
             request.Method = HttpMethod.Patch;
@@ -111,14 +112,14 @@ namespace Tests
                     value = "V"
                 }
             }.SerializeToJsonContent("application/json-patch+json");
-            var response = httpClient.Send(request);
+            var response = await HttpClient.SendAsync(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
             response.ShouldNotHaveHeader("Content-Type");
         }
 
         [Test]
-        public void Test4_Code400_WhenEmptyContent()
+        public async Task Test4_Code400_WhenEmptyContent()
         {
             var updatingUserId = Guid.NewGuid().ToString();
 
@@ -127,16 +128,16 @@ namespace Tests
             request.RequestUri = BuildUsersByIdUri(updatingUserId);
             request.Headers.Add("Accept", "*/*");
             request.AddEmptyContent("application/json-patch+json");
-            var response = httpClient.Send(request);
+            var response = await HttpClient.SendAsync(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
             response.ShouldNotHaveHeader("Content-Type");
         }
 
         [Test]
-        public void Test5_Code422_WhenEmptyLogin()
+        public async Task Test5_Code422_WhenEmptyLogin()
         {
-            var createdUserId = CreateUser(new
+            var createdUserId = await CreateUser(new
             {
                 login = "anonymous"
             });
@@ -152,7 +153,7 @@ namespace Tests
                     value = ""
                 }
             }.SerializeToJsonContent("application/json-patch+json");
-            var response = httpClient.Send(request);
+            var response = await HttpClient.SendAsync(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
             response.ShouldHaveHeader("Content-Type", "application/json; charset=utf-8");
@@ -162,9 +163,9 @@ namespace Tests
         }
 
         [Test]
-        public void Test6_Code422_WhenLoginWithUnallowedChars()
+        public async Task Test6_Code422_WhenLoginWithUnallowedChars()
         {
-            var createdUserId = CreateUser(new
+            var createdUserId = await CreateUser(new
             {
                 login = "anonymous"
             });
@@ -180,7 +181,7 @@ namespace Tests
                     value = "!Anon!"
                 }
             }.SerializeToJsonContent("application/json-patch+json");
-            var response = httpClient.Send(request);
+            var response = await HttpClient.SendAsync(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
             response.ShouldHaveHeader("Content-Type", "application/json; charset=utf-8");
@@ -190,9 +191,9 @@ namespace Tests
         }
 
         [Test]
-        public void Test7_Code422_WhenEmptyFirstName()
+        public async Task Test7_Code422_WhenEmptyFirstName()
         {
-            var createdUserId = CreateUser(new
+            var createdUserId = await CreateUser(new
             {
                 login = "anonymous"
             });
@@ -208,7 +209,7 @@ namespace Tests
                     value = ""
                 }
             }.SerializeToJsonContent("application/json-patch+json");
-            var response = httpClient.Send(request);
+            var response = await HttpClient.SendAsync(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
             response.ShouldHaveHeader("Content-Type", "application/json; charset=utf-8");
@@ -218,9 +219,9 @@ namespace Tests
         }
 
         [Test]
-        public void Test8_Code422_WhenEmptyLastName()
+        public async Task Test8_Code422_WhenEmptyLastName()
         {
-            var createdUserId = CreateUser(new
+            var createdUserId = await CreateUser(new
             {
                 login = "anonymous"
             });
@@ -236,7 +237,7 @@ namespace Tests
                     value = ""
                 }
             }.SerializeToJsonContent("application/json-patch+json");
-            var response = httpClient.Send(request);
+            var response = await HttpClient.SendAsync(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.UnprocessableEntity);
             response.ShouldHaveHeader("Content-Type", "application/json; charset=utf-8");
