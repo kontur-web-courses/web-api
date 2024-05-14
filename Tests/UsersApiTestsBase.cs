@@ -23,14 +23,14 @@ namespace Tests
 
         protected Uri BuildUsersByIdUri(string userId)
         {
-            var uriBuilder = new UriBuilder(Configuration.BaseUrl);
+            var uriBuilder = new UriBuilder();
             uriBuilder.Path = $"/api/users/{HttpUtility.UrlEncode(userId)}";
             return uriBuilder.Uri;
         }
 
         protected Uri BuildUsersUri()
         {
-            var uriBuilder = new UriBuilder(Configuration.BaseUrl);
+            var uriBuilder = new UriBuilder();
             uriBuilder.Path = $"/api/users";
             return uriBuilder.Uri;
         }
@@ -43,7 +43,7 @@ namespace Tests
             if (pageSize.HasValue)
                 query.Add("pageSize", pageSize.Value.ToString());
 
-            var uriBuilder = new UriBuilder(Configuration.BaseUrl);
+            var uriBuilder = new UriBuilder();
             uriBuilder.Path = $"/api/users";
             uriBuilder.Query = query.ToString();
             return uriBuilder.Uri;
