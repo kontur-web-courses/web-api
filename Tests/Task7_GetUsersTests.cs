@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace Tests
 {
@@ -12,15 +13,15 @@ namespace Tests
     public class Task7_GetUsersTests : UsersApiTestsBase
     {
         [Test]
-        public void Test1_Code200_WhenFirstPage()
+        public async Task Test1_Code200_WhenFirstPage()
         {
-            CreateUniqueUsers(20);
+            await CreateUniqueUsers(20);
 
             var request = new HttpRequestMessage();
             request.Method = HttpMethod.Get;
             request.RequestUri = BuildUsersWithPagesUri(null, null);
             request.Headers.Add("Accept", "*/*");
-            var response = httpClient.Send(request);
+            var response = await HttpClient.SendAsync(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.ShouldHaveHeader("Content-Type", "application/json; charset=utf-8");
@@ -37,15 +38,15 @@ namespace Tests
         }
 
         [Test]
-        public void Test2_Code200_WhenSecondPage()
+        public async Task Test2_Code200_WhenSecondPage()
         {
-            CreateUniqueUsers(30);
+            await CreateUniqueUsers(30);
 
             var request = new HttpRequestMessage();
             request.Method = HttpMethod.Get;
             request.RequestUri = BuildUsersWithPagesUri(2, 10);
             request.Headers.Add("Accept", "*/*");
-            var response = httpClient.Send(request);
+            var response = await HttpClient.SendAsync(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.ShouldHaveHeader("Content-Type", "application/json; charset=utf-8");
@@ -62,13 +63,13 @@ namespace Tests
         }
 
         [Test]
-        public void Test3_Code200_WhenPageNumberMinIs1()
+        public async Task Test3_Code200_WhenPageNumberMinIs1()
         {
             var request = new HttpRequestMessage();
             request.Method = HttpMethod.Get;
             request.RequestUri = BuildUsersWithPagesUri(0, null);
             request.Headers.Add("Accept", "*/*");
-            var response = httpClient.Send(request);
+            var response = await HttpClient.SendAsync(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.ShouldHaveHeader("Content-Type", "application/json; charset=utf-8");
@@ -80,13 +81,13 @@ namespace Tests
         }
 
         [Test]
-        public void Test4_Code200_WhenPageSizeMinIs1()
+        public async Task Test4_Code200_WhenPageSizeMinIs1()
         {
             var request = new HttpRequestMessage();
             request.Method = HttpMethod.Get;
             request.RequestUri = BuildUsersWithPagesUri(null, 0);
             request.Headers.Add("Accept", "*/*");
-            var response = httpClient.Send(request);
+            var response = await HttpClient.SendAsync(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.ShouldHaveHeader("Content-Type", "application/json; charset=utf-8");
@@ -98,13 +99,13 @@ namespace Tests
         }
 
         [Test]
-        public void Test5_Code200_WhenPageSizeMaxIs20()
+        public async Task Test5_Code200_WhenPageSizeMaxIs20()
         {
             var request = new HttpRequestMessage();
             request.Method = HttpMethod.Get;
             request.RequestUri = BuildUsersWithPagesUri(null, 100);
             request.Headers.Add("Accept", "*/*");
-            var response = httpClient.Send(request);
+            var response = await HttpClient.SendAsync(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.ShouldHaveHeader("Content-Type", "application/json; charset=utf-8");
@@ -116,13 +117,13 @@ namespace Tests
         }
 
         [Test]
-        public void Test6_Code200_WhenPageSizeIs1()
+        public async Task Test6_Code200_WhenPageSizeIs1()
         {
             var request = new HttpRequestMessage();
             request.Method = HttpMethod.Get;
             request.RequestUri = BuildUsersWithPagesUri(null, 1);
             request.Headers.Add("Accept", "*/*");
-            var response = httpClient.Send(request);
+            var response = await HttpClient.SendAsync(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             response.ShouldHaveHeader("Content-Type", "application/json; charset=utf-8");
@@ -135,11 +136,11 @@ namespace Tests
             pagination.TotalPages.Should().Be(pagination.TotalCount);
         }
 
-        private void CreateUniqueUsers(int count)
+        private async Task CreateUniqueUsers(int count)
         {
             for (var i = 0; i < count; i++)
             {
-                CreateUser(new
+                await CreateUser(new
                 {
                     login = Guid.NewGuid().ToString().Replace("-", "")
                 });

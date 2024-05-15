@@ -6,6 +6,10 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <LangVersion>11</LangVersion>
     </PropertyGroup>
+    
+    <ItemGroup>
+      <InternalsVisibleTo Include="Tests"/>
+    </ItemGroup>
 
     <ItemGroup>
       <None Include="Samples\GameApi.postman_collection.json" />
