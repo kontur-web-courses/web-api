@@ -11,13 +11,3 @@ var app = builder.Build();
 app.MapControllers();
 
 app.Run();
-
-namespace WebApi.MinimalApi
-{
-    public partial class Program
-    {
-        protected Program()
-        {
-        }
-    }
-}

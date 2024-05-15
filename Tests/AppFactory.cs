@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Tests;
 
-public class AppFactory: WebApplicationFactory<WebApi.MinimalApi.Program>
+internal class AppFactory: WebApplicationFactory<global::Program>
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
