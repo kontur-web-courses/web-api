@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using WebApi.MinimalApi.Domain;
-using WebApi.MinimalApi.Extensions;
 using WebApi.MinimalApi.Models;
 
 namespace WebApi.MinimalApi.Controllers;
@@ -10,26 +10,56 @@ namespace WebApi.MinimalApi.Controllers;
 public class UsersController : Controller
 {
     private readonly IUserRepository userRepository;
+    private readonly IMapper mapper;
     
     // Чтобы ASP.NET положил что-то в userRepository требуется конфигурация
-    public UsersController(IUserRepository userRepository)
+    public UsersController(IUserRepository userRepository, IMapper mapper)
     {
         this.userRepository = userRepository;
+        this.mapper = mapper;
     }
 
-    [HttpGet("{userId}")]
+    [HttpGet("{userId:guid}", Name = nameof(GetUserById))]
     public ActionResult<UserDto> GetUserById(Guid userId)
     {
         var user = userRepository.FindById(userId);
         if (user is null)
             return NotFound();
 
-        return Ok(user.ToUserDto());
+        return Ok(mapper.Map<UserDto>(user));
     }
 
     [HttpPost]
-    public IActionResult CreateUser([FromBody] object user)
+    public IActionResult CreateUser([FromBody] UserToCreateDto user)
     {
-        throw new NotImplementedException();
+        if (user is null)
+        {
+            return BadRequest();
+        }
+        
+        if (!ModelState.IsValid)
+        {
+            return UnprocessableEntity(ModelState);
+        }
+        
+        foreach (var symbol in user.Login)
+        {
+            if (!char.IsLetterOrDigit(symbol))
+            {
+                ModelState.AddModelError("Login", "Login must contain only letters, numbers and spaces.");
+            }
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return UnprocessableEntity(ModelState);
+        }
+        
+        var userEntity = userRepository.Insert(mapper.Map<UserEntity>(user));
+        
+        return CreatedAtRoute(
+            nameof(GetUserById),
+            new { userId = userEntity.Id },
+            userEntity.Id);
     }
 }
