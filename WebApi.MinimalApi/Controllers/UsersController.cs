@@ -1,9 +1,18 @@
-﻿using AutoMapper;
+﻿using System.ComponentModel.DataAnnotations;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
 
 namespace WebApi.MinimalApi.Controllers;
+
+public class CreatingUserDto
+{
+    [Required]
+    public string Login { get; set; }
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+}
 
 [Route("api/[controller]")]
 [ApiController]
@@ -20,7 +29,7 @@ public class UsersController : Controller
     }
 
     [Produces("application/json", "application/xml")]
-    [HttpGet("{userId}")]
+    [HttpGet("{userId}", Name = nameof(GetUserById))]
     
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
@@ -34,8 +43,19 @@ public class UsersController : Controller
     }
 
     [HttpPost]
-    public IActionResult CreateUser([FromBody] object user)
+    public IActionResult CreateUser([FromBody] CreatingUserDto user)
     {
-        throw new NotImplementedException();
+        var createdUserEntity = mapper.Map<UserEntity>(user);
+        if (!user.Login.All(char.IsLetterOrDigit))
+        {
+            ModelState.AddModelError(nameof(user.Login), "Сообщение об ошибке");
+            return UnprocessableEntity(ModelState);
+        }
+        
+        return CreatedAtRoute(
+            nameof(GetUserById),
+            new { userId = createdUserEntity.Id },
+            user);
     }
+
 }

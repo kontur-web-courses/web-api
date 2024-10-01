@@ -8,8 +8,8 @@ namespace Tests
         {
             var testsToRun = new string[]
             {
-                typeof(Task1_GetUserByIdTests).FullName,
-                //typeof(Task2_CreateUserTests).FullName,
+                //typeof(Task1_GetUserByIdTests).FullName,
+                typeof(Task2_CreateUserTests).FullName,
                 //typeof(Task3_UpdateUserTests).FullName,
                 //typeof(Task4_PartiallyUpdateUserTests).FullName,
                 //typeof(Task5_DeleteUserTests).FullName,
