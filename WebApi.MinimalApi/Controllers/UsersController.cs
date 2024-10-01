@@ -7,7 +7,7 @@ using WebApi.MinimalApi.Models;
 
 namespace WebApi.MinimalApi.Controllers;
 
-public class CreatingUserDto
+public class guid
 {
     [Required]
     public string Login { get; set; }
@@ -46,10 +46,15 @@ public class UsersController : Controller
     
     [Produces("application/json", "application/xml")]
     [HttpPost]
-    public IActionResult CreateUser([FromBody] CreatingUserDto user)
+    public IActionResult CreateUser([FromBody] guid user)
     {
         var createdUserEntity = mapper.Map<UserEntity>(user);
-        if (!user.Login.All(char.IsLetterOrDigit))
+        if (user == null)
+        {
+            return BadRequest();
+        }
+        
+        if (user.Login == null || !user.Login.All(char.IsLetterOrDigit))
         {
             ModelState.AddModelError(nameof(user.Login), "Сообщение об ошибке");
             return UnprocessableEntity(ModelState);
