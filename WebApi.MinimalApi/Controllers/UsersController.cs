@@ -16,6 +16,7 @@ public class UsersController : Controller
         this.userRepository = userRepository;
     }
 
+    [Produces("application/json", "application/xml")]
     [HttpGet("{userId}")]
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
@@ -24,7 +25,13 @@ public class UsersController : Controller
         {
             return NotFound();
         }
-        return Ok(user);
+        var dto = new UserDto();
+        dto.Id = user.Id;
+        dto.Login = user.Login;
+        dto.GamesPlayed = user.GamesPlayed;
+        dto.CurrentGameId = user.CurrentGameId;
+        dto.FullName = $"{user.LastName} {user.FirstName}";
+        return Ok(dto);
     }
 
     [HttpPost]
