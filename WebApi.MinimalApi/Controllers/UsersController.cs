@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.MinimalApi.Domain;
@@ -10,7 +11,9 @@ public class CreatingUserDto
 {
     [Required]
     public string Login { get; set; }
+    [DefaultValue("John")]
     public string FirstName { get; set; }
+    [DefaultValue("Doe")]
     public string LastName { get; set; }
 }
 
@@ -30,7 +33,6 @@ public class UsersController : Controller
 
     [Produces("application/json", "application/xml")]
     [HttpGet("{userId}", Name = nameof(GetUserById))]
-    
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
         var user = userRepository.FindById(userId);
@@ -41,7 +43,8 @@ public class UsersController : Controller
         var userDto = mapper.Map<UserDto>(user);
         return Ok(userDto);
     }
-
+    
+    [Produces("application/json", "application/xml")]
     [HttpPost]
     public IActionResult CreateUser([FromBody] CreatingUserDto user)
     {
