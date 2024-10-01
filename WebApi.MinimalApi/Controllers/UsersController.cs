@@ -39,10 +39,29 @@ namespace WebApi.MinimalApi.Controllers
             return Ok(userDto);
         }
 
+        public class CreateUserDto
+        {
+            public string Login { get; set; }
+            public string FirstName { get; set; }
+            public string LastName { get; set; }
+        }
+
         [HttpPost]
         public IActionResult CreateUser([FromBody] UserDto userDto)
         {
-            throw new NotImplementedException();
+            if (userDto == null)
+            {
+                return BadRequest("User data is required.");
+            }
+
+            var userEntity = new UserEntity
+            {
+                Login = userDto.Login,
+            };
+
+            _userRepository.Insert(userEntity);
+
+            return CreatedAtAction(nameof(GetUserById), new { userId = userEntity.Id }, userDto);
         }
     }
 }
