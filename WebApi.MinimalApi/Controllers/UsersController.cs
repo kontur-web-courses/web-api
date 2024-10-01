@@ -1,27 +1,48 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
+using System;
 
-namespace WebApi.MinimalApi.Controllers;
-
-[Route("api/[controller]")]
-[ApiController]
-public class UsersController : Controller
+namespace WebApi.MinimalApi.Controllers
 {
-    // Чтобы ASP.NET положил что-то в userRepository требуется конфигурация
-    public UsersController(IUserRepository userRepository)
+    [Route("api/[controller]")]
+    [ApiController]
+    public class UsersController : Controller
     {
-    }
+        private readonly IUserRepository _userRepository;
 
-    [HttpGet("{userId}")]
-    public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
-    {
-        throw new NotImplementedException();
-    }
+        public UsersController(IUserRepository userRepository)
+        {
+            _userRepository = userRepository;
+        }
 
-    [HttpPost]
-    public IActionResult CreateUser([FromBody] object user)
-    {
-        throw new NotImplementedException();
+        [HttpGet("{userId}")]
+        public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
+        {
+            var user = _userRepository.FindById(userId);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var userDto = new UserDto
+            {
+                Id = user.Id,
+                Login = user.Login,
+                FullName = user.LastName + ' ' + user.FirstName,
+                GamesPlayed = user.GamesPlayed,
+                CurrentGameId = user.CurrentGameId
+            };
+
+
+
+            return Ok(userDto);
+        }
+
+        [HttpPost]
+        public IActionResult CreateUser([FromBody] UserDto userDto)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
