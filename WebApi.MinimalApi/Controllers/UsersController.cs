@@ -9,9 +9,9 @@ namespace WebApi.MinimalApi.Controllers;
 [ApiController]
 public class UsersController : Controller
 {
-    private readonly IUserRepository userRepository;
     private readonly IMapper mapper;
-    
+    private readonly IUserRepository userRepository;
+
     public UsersController(IUserRepository userRepository,
                            IMapper mapper)
     {
@@ -19,20 +19,29 @@ public class UsersController : Controller
         this.mapper = mapper;
     }
 
-    [HttpGet("{userId}")]
-    [Produces("application/json", "application/xml")]
+    [HttpGet("{userId}", Name = nameof(GetUserById))]
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
         var user = userRepository.FindById(userId);
-        if (user == null)
-            return NotFound();
         var userDto = mapper.Map<UserDto>(user);
         return Ok(userDto);
     }
 
-    [HttpPost]
-    public IActionResult CreateUser([FromBody] object user)
+    [HttpPost("")]
+    public IActionResult CreateUser([FromBody] UserToCreateDto? user)
     {
-        throw new NotImplementedException();
+        if (user == null)
+            return BadRequest();
+        if (user.Login?.All(char.IsLetterOrDigit) == false)
+            ModelState.AddModelError(nameof(UserToCreateDto.Login), "Login should contain only letters or digits");
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+        var userEntity = mapper.Map<UserEntity>(user);
+        userEntity = userRepository.Insert(userEntity);
+
+        return CreatedAtRoute(
+            nameof(GetUserById),
+            new { userId = userEntity.Id },
+            userEntity.Id);
     }
 }
