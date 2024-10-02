@@ -1,7 +1,12 @@
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using AutoMapper;
+using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
-using System;
+
+
 
 namespace WebApi.MinimalApi.Controllers
 {
@@ -10,10 +15,12 @@ namespace WebApi.MinimalApi.Controllers
     public class UsersController : Controller
     {
         private readonly IUserRepository _userRepository;
+        private IMapper mapper;
 
-        public UsersController(IUserRepository userRepository)
+        public UsersController(IUserRepository userRepository, IMapper mapper)
         {
             _userRepository = userRepository;
+            this.mapper = mapper;
         }
 
         [HttpGet("{userId}")]
@@ -25,43 +32,48 @@ namespace WebApi.MinimalApi.Controllers
                 return NotFound();
             }
 
-            var userDto = new UserDto
-            {
-                Id = user.Id,
-                Login = user.Login,
-                FullName = user.LastName + ' ' + user.FirstName,
-                GamesPlayed = user.GamesPlayed,
-                CurrentGameId = user.CurrentGameId
-            };
+            var userDto = mapper.Map<UserDto>(user);
 
 
 
             return Ok(userDto);
         }
 
-        public class CreateUserDto
-        {
-            public string Login { get; set; }
-            public string FirstName { get; set; }
-            public string LastName { get; set; }
-        }
+        
 
         [HttpPost]
-        public IActionResult CreateUser([FromBody] UserDto userDto)
+        [Produces("application/json", "application/xml")]
+        public IActionResult CreateUser([FromBody] guid guid)
         {
-            if (userDto == null)
+
+
+
+            var userEntity = mapper.Map<UserEntity>(guid);
+
+            if (guid == null)
             {
-                return BadRequest("User data is required.");
+                return BadRequest();
             }
 
-            var userEntity = new UserEntity
+            if (guid.Login == null)
             {
-                Login = userDto.Login,
-            };
+                ModelState.AddModelError("login", "massege");
+                var response = UnprocessableEntity(ModelState);
+                return response;
+            }
+
+            if (!guid.Login.All(char.IsLetterOrDigit))
+            {
+                ModelState.AddModelError("login", "massege");
+                var response = UnprocessableEntity(ModelState);
+                return response;
+            }
 
             _userRepository.Insert(userEntity);
 
-            return CreatedAtAction(nameof(GetUserById), new { userId = userEntity.Id }, userDto);
+            return CreatedAtAction(nameof(GetUserById), new { userId = userEntity.Id, login = userEntity.Login }, guid);
         }
     }
+
+    
 }
