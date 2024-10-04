@@ -3,13 +3,15 @@ using System.ComponentModel.DataAnnotations;
 
 namespace WebApi.MinimalApi.Models
 {
-    public class guid
+    public class UpdateUserDto
     {
         [Required]
+        [RegularExpression("^[0-9\\p{L}]*$", ErrorMessage = "Login should contain only letters or digits")]
         public string Login { get; set; }
-        [DefaultValue("")]
+        [Required]
         public string FirstName { get; set; }
-        [DefaultValue("")]
+        [Required]
         public string LastName { get; set; }
+
     }
 }

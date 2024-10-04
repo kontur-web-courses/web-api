@@ -5,6 +5,7 @@ using WebApi.MinimalApi.Models;
 using System;
 using static WebApi.MinimalApi.Controllers.UsersController;
 using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://localhost:5000");
@@ -28,6 +29,7 @@ builder.Services.AddControllers(options =>
 .AddNewtonsoftJson(options =>
 {
     options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+    options.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Populate;
 }); 
 
 // Регистрируем репозиторий пользователей в памяти
@@ -35,6 +37,8 @@ builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
 
 builder.Services.AddAutoMapper(cfg =>
 {
+    cfg.CreateMap<UserEntity, UpdateUserDto>();
+    cfg.CreateMap<UpdateUserDto, UserEntity>();
     cfg.CreateMap<UserDto, UserEntity>();
     cfg.CreateMap<UserDto, guid>();
     cfg.CreateMap<UserEntity, guid>();
