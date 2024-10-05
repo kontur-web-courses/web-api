@@ -7,9 +7,9 @@ namespace WebApi.MinimalApi.Models
     {
         [Required]
         public string Login { get; set; }
-        [DefaultValue("")]
+        //[DefaultValue("")]
         public string FirstName { get; set; }
-        [DefaultValue("")]
+        //[DefaultValue("")]
         public string LastName { get; set; }
     }
 }

@@ -98,14 +98,21 @@ namespace Tests
 
         protected void DeleteUser(string userId)
         {
-            var request = new HttpRequestMessage();
-            request.Method = HttpMethod.Delete;
-            request.RequestUri = BuildUsersByIdUri(userId);
+            var request = new HttpRequestMessage
+            {
+                Method = HttpMethod.Delete,
+                RequestUri = BuildUsersByIdUri(userId)
+            };
+
             request.Headers.Add("Accept", "*/*");
-            var response = HttpClient.Send(request);
+
+            var response = HttpClient.SendAsync(request).GetAwaiter().GetResult();
 
             response.StatusCode.Should().Be(HttpStatusCode.NoContent);
             response.ShouldNotHaveHeader("Content-Type");
         }
+
+
+
     }
 }
