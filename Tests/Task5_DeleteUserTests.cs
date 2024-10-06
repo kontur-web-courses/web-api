@@ -65,7 +65,7 @@ namespace Tests
                 lastName = "Condenado"
             });
 
-            DeleteUser(createdUserId);
+            await DeleteUser(createdUserId);
 
             var request = new HttpRequestMessage();
             request.Method = HttpMethod.Delete;
