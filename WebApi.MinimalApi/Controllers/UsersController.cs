@@ -274,31 +274,30 @@ namespace WebApi.MinimalApi.Controllers
         [Produces("application/json", "application/xml")]
         public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
-            // Ограничиваем значения pageSize и pageNumber
+
             if (pageNumber < 1) pageNumber = 1;
             if (pageSize < 1) pageSize = 1;
             if (pageSize > 20) pageSize = 20;
 
-            // Получаем пользователей из репозитория с постраничным разделением
-            var pageList = userRepository.GetPage(pageNumber, pageSize); // Предполагается асинхронный метод
 
-            // Преобразуем пользователей в DTO
+            var pageList = userRepository.GetPage(pageNumber, pageSize);
+
+
             var users = mapper.Map<IEnumerable<UserDto>>(pageList);
 
-            // Создаем заголовок X-Pagination
+
             var paginationHeader = new
             {
                 previousPageLink = pageList.HasPrevious ?
-                    linkGenerator.GetUriByRouteValues(HttpContext, nameof(GetUsers), new { pageNumber = pageNumber - 1, pageSize }) : null,
+                    linkGenerator.GetUriByAction(HttpContext, nameof(GetUsers), values: new { pageNumber = pageNumber - 1, pageSize }) : null,
                 nextPageLink = pageList.HasNext ?
-                    linkGenerator.GetUriByRouteValues(HttpContext, nameof(GetUsers), new { pageNumber = pageNumber + 1, pageSize }) : null,
+                    linkGenerator.GetUriByAction(HttpContext, nameof(GetUsers), values: new { pageNumber = pageNumber + 1, pageSize }) : null,
                 totalCount = pageList.TotalCount,
                 pageSize = pageSize,
                 currentPage = pageNumber,
                 totalPages = (int)Math.Ceiling((double)pageList.TotalCount / pageSize)
             };
 
-            // Добавляем заголовок в ответ
             Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(paginationHeader));
 
             return Ok(users);
@@ -309,7 +308,6 @@ namespace WebApi.MinimalApi.Controllers
         [HttpOptions]
         public IActionResult Options()
         {
-            // Добавляем заголовок Allow с перечислением доступных методов
             Response.Headers.Add("Allow", "GET, POST, OPTIONS");
 
             return Ok();
