@@ -32,18 +32,18 @@ public class UsersController : Controller
     }
 
     [HttpPost]
-    public IActionResult CreateUser([FromBody] CreateUserDto createUser)
+    public IActionResult CreateUser([FromBody] CreatedUserDto createdUser)
     {
-        if (createUser == null)
+        if (createdUser == null)
             return BadRequest();
         
-        var createdUserEntity = mapper.Map<UserEntity>(createUser);
+        var createdUserEntity = mapper.Map<UserEntity>(createdUser);
         
         if (!ModelState.IsValid)
             return UnprocessableEntity(ModelState);
         
         if (!createdUserEntity.Login.All(char.IsLetterOrDigit))
-            ModelState.AddModelError("Login", "Login must only contain letters or digits");
+            ModelState.AddModelError("Login", "Login should contain only letters or digits");
         
         if (!ModelState.IsValid)
             return UnprocessableEntity(ModelState);
@@ -54,5 +54,25 @@ public class UsersController : Controller
             nameof(GetUserById),
             new { userId = createdUserEntity.Id },
             createdUserEntity.Id);
+    }
+
+    [HttpPut("{userId}")]
+    public IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] UpdatedUserDto updatedUser)
+    {
+        if (updatedUser == null || userId == Guid.Empty)
+            return BadRequest();
+        
+        updatedUser.Id = userId;
+        var updatedUserEntity = mapper.Map<UserEntity>(updatedUser);
+        
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+        
+        userRepository.UpdateOrInsert(updatedUserEntity, out var isInserted);
+        
+        if (isInserted)
+            return Created("User not found in repository. Created a new one successfully", updatedUserEntity);
+        
+        return NoContent();
     }
 }
