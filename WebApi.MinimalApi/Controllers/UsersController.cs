@@ -1,22 +1,13 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using AutoMapper;
-using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
 
 namespace WebApi.MinimalApi.Controllers;
 
-public class UserDto
-{
-    [Required]
-    public string Login { get; set; }
-    [DefaultValue("John")]
-    public string FirstName { get; set; }
-    [DefaultValue("Doe")]
-    public string LastName { get; set; }
-}
+
 
 [Route("api/[controller]")]
 [ApiController]
@@ -53,17 +44,17 @@ public class UsersController : Controller
     
     [Produces("application/json", "application/xml")]
     [HttpPost]
-    public IActionResult CreateUser([FromBody] UserDto user)
+    public IActionResult CreateUser([FromBody] CreateUserDto createUser)
     {
-        var createdUserEntity = mapper.Map<UserEntity>(user);
-        if (user == null)
+        var createdUserEntity = mapper.Map<UserEntity>(createUser);
+        if (createUser == null)
         {
             return BadRequest();
         }
         
-        if (user.Login == null || !user.Login.All(char.IsLetterOrDigit))
+        if (createUser.Login == null || !createUser.Login.All(char.IsLetterOrDigit))
         {
-            ModelState.AddModelError(nameof(user.Login), "Сообщение об ошибке");
+            ModelState.AddModelError(nameof(createUser.Login), "Сообщение об ошибке");
             return UnprocessableEntity(ModelState);
         }
         var insertedUser = userRepository.Insert(createdUserEntity);
@@ -72,6 +63,34 @@ public class UsersController : Controller
             new { userId = insertedUser.Id },
             insertedUser.Id);
     }
+    
+    [Produces("application/json", "application/xml")]
+    [HttpPut("{userId}")]
+    public IActionResult UpdateUser([FromBody] UpdateUserDto createUser , [FromRoute] Guid userId)
+    {
+        
+        var createdUserEntity = mapper.Map(new UserEntity(userId), mapper.Map<UserEntity>(createUser));
+        if (createUser is null || userId == Guid.Empty)
+        {
+            return BadRequest();
+        }
+        
+        if (!ModelState.IsValid)
+        {
+            return UnprocessableEntity(ModelState);
+        }
+        
+        userRepository.UpdateOrInsert(createdUserEntity, out bool isInsert);
+        
+        if (isInsert)
+            return CreatedAtAction(
+                nameof(GetUserById),
+                new { userId = createdUserEntity.Id },
+                createdUserEntity.Id);
+
+        return NoContent();
+    }
+
     
     [HttpDelete("{userId}")]
     public IActionResult DeleteUser([FromRoute] System.Guid userId)

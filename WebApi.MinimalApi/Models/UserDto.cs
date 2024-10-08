@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace WebApi.MinimalApi.Models;
 
 public class UserDto
