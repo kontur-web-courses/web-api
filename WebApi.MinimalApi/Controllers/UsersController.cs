@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Newtonsoft.Json;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
+// ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
 
 namespace WebApi.MinimalApi.Controllers;
 
@@ -104,7 +104,6 @@ public class UsersController : Controller
     }
 
     [HttpDelete("{userId}")]
-    [Produces("application/json", "application/xml")]
     public IActionResult DeleteUser([FromRoute] Guid userId)
     {
         if (userId == Guid.Empty || userRepository.FindById(userId) == null)
@@ -152,5 +151,12 @@ public class UsersController : Controller
         
         var users = mapper.Map<IEnumerable<UserDto>>(pageList);
         return Ok(users);
+    }
+
+    [HttpOptions]
+    public IActionResult Options()
+    {
+        Response.Headers.Append("Allow", new[] {"GET", "POST", "OPTIONS"});
+        return Ok();
     }
 }
