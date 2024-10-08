@@ -8,8 +8,7 @@ using System.Text.RegularExpressions;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
 using Microsoft.AspNetCore.Routing;
-
-
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace WebApi.MinimalApi.Controllers
 {
@@ -28,7 +27,16 @@ namespace WebApi.MinimalApi.Controllers
             this.linkGenerator = linkGenerator;
         }
 
+        /// <summary>
+        /// Получить пользователя по Id
+        /// </summary>
+        /// <param name="userId">Id пользователя</param>
+        /// <returns>Пользователь</returns>
+        /// <response code="200">Успешное получение пользователя</response>
+        /// <response code="404">Пользователь не найден</response>
         [HttpGet("{userId}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(UserDto))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
         {
             var user = userRepository.FindById(userId);
@@ -40,10 +48,21 @@ namespace WebApi.MinimalApi.Controllers
 
             return Ok(userDto);
         }
-        
+
+        /// <summary>
+        /// Создать нового пользователя
+        /// </summary>
+        /// <param name="user">Данные пользователя</param>
+        /// <returns>Id созданного пользователя</returns>
+        /// <response code="201">Успешное создание пользователя</response>
+        /// <response code="400">Неверные данные пользователя</response>
+        /// <response code="422">Неверный формат данных</response>
         [HttpPost]
         [Produces("application/json", "application/xml")]
-        public IActionResult CreateUser([FromBody] guid user)
+        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Guid))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+        public IActionResult CreateUser([FromBody] UserDto user)
         {
             if (user == null)
             {
@@ -64,8 +83,22 @@ namespace WebApi.MinimalApi.Controllers
             return CreatedAtAction(nameof(GetUserById), new { userId = userEntity.Id, login = userEntity.Login }, userEntity.Id);
         }
 
+        /// <summary>
+        /// Обновить информацию о пользователе
+        /// </summary>
+        /// <param name="userId">Id пользователя</param>
+        /// <param name="userDto">Данные пользователя</param>
+        /// <returns></returns>
+        /// <response code="201">Успешное создание пользователя</response>
+        /// <response code="204">Пользователь обновлен</response>
+        /// <response code="400">Неверные данные пользователя</response>
+        /// <response code="422">Неверный формат данных</response>
         [HttpPut("{userId}")]
         [Produces("application/json", "application/xml")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public IActionResult UpdateUser([FromRoute] string userId, [FromBody] UpdateUserDto userDto)
         {
             if (userDto == null) return BadRequest();
@@ -106,8 +139,22 @@ namespace WebApi.MinimalApi.Controllers
 
 
 
+        /// <summary>
+        /// Частично обновить информацию о пользователе
+        /// </summary>
+        /// <param name="userId">Id пользователя</param>
+        /// <param name="patchDoc">Список изменений</param>
+        /// <returns></returns>
+        /// <response code="204">Пользователь обновлен</response>
+        /// <response code="400">Неверные данные пользователя</response>
+        /// <response code="404">Пользователь не найден</response>
+        /// <response code="422">Неверный формат данных</response>
         [HttpPatch("{userId}")]
         [Produces("application/json", "application/xml")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public IActionResult PartiallyUpdateUser([FromRoute] string userId, [FromBody] JsonPatchDocument<UpdateUserDto> patchDoc)
         {
             if (patchDoc == null) return BadRequest();
@@ -132,7 +179,16 @@ namespace WebApi.MinimalApi.Controllers
 
 
 
+        /// <summary>
+        /// Удалить пользователя
+        /// </summary>
+        /// <param name="userId">Id пользователя</param>
+        /// <returns></returns>
+        /// <response code="204">Пользователь удален</response>
+        /// <response code="404">Пользователь не найден</response>
         [HttpDelete("{userId}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult DeleteUser([FromRoute] string userId)
         {
             if (!Guid.TryParse(userId, out Guid guidUserId))
@@ -149,12 +205,19 @@ namespace WebApi.MinimalApi.Controllers
             userRepository.Delete(user.Id);
             return NoContent();
         }
-        
+
+        /// <summary>
+        /// Получить информацию о пользователе без возвращения данных
+        /// </summary>
+        /// <param name="userId">Id пользователя</param>
+        /// <returns></returns>
+        /// <response code="200">Пользователь найден</response>
+        /// <response code="404">Пользователь не найден</response>
         [HttpHead("{userId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public IActionResult GetUserById([FromRoute] string userId)
         {
-            
-
             if (!Guid.TryParse(userId, out Guid guidUserId))
             {
                 return NotFound();
@@ -170,8 +233,16 @@ namespace WebApi.MinimalApi.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Получить список пользователей
+        /// </summary>
+        /// <param name="pageNumber">Номер страницы</param>
+        /// <param name="pageSize">Размер страницы</param>
+        /// <returns>Список пользователей</returns>
+        /// <response code="200">Успешное получение списка пользователей</response>
         [HttpGet]
         [Produces("application/json", "application/xml")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<UserDto>))]
         public IActionResult GetUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
 
@@ -205,7 +276,13 @@ namespace WebApi.MinimalApi.Controllers
 
 
 
+        /// <summary>
+        /// Получить список доступных методов для контроллера
+        /// </summary>
+        /// <returns></returns>
+        /// <response code="200">Успешное получение списка доступных методов</response>
         [HttpOptions]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public IActionResult Options()
         {
             Response.Headers.Add("Allow", "GET, POST, OPTIONS");
