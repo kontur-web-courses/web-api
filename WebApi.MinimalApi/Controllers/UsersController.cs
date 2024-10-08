@@ -68,14 +68,14 @@ public class UsersController : Controller
     }
     
     [HttpDelete("{userId}")]
-    public IActionResult DeleteUser([FromBody] String userId)
+    public IActionResult DeleteUser([FromRoute] System.Guid userId)
     {
-        // var user = userRepository.FindById(userId);
-        // if (user == null)
-        // {
-        //     return NotFound();
-        // }
-        // userRepository.Delete(userId);
+        var user = userRepository.FindById(userId);
+        if (user == null)
+        {
+            return NotFound();
+        } 
+        userRepository.Delete(userId);
         return NoContent();
     }
 }
