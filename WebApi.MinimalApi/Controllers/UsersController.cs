@@ -20,7 +20,7 @@ public class UsersController : Controller
         this.mapper = mapper;
     }
 
-    [HttpGet("{userId}")]
+    [HttpGet("{userId}", Name = nameof(GetUserById))]
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
         var user = userRepository.FindById(userId);
@@ -32,8 +32,27 @@ public class UsersController : Controller
     }
 
     [HttpPost]
-    public IActionResult CreateUser([FromBody] object user)
+    public IActionResult CreateUser([FromBody] CreateUserDto createUser)
     {
-        throw new NotImplementedException();
+        if (createUser == null)
+            return BadRequest();
+        
+        var createdUserEntity = mapper.Map<UserEntity>(createUser);
+        
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+        
+        if (!createdUserEntity.Login.All(char.IsLetterOrDigit))
+            ModelState.AddModelError("Login", "Login must only contain letters or digits");
+        
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+        
+        createdUserEntity = userRepository.Insert(createdUserEntity);
+        
+        return CreatedAtRoute(
+            nameof(GetUserById),
+            new { userId = createdUserEntity.Id },
+            createdUserEntity.Id);
     }
 }
