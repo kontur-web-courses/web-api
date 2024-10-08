@@ -4,11 +4,13 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
+using WebApi.MinimalApi.Samples;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://localhost:5000");
 builder.Services
     .AddRepositories()
+    .AddSwaggerGeneration()
     .AddControllers(options =>
     {
         options.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
@@ -31,5 +33,5 @@ builder.Services.AddAutoMapper(cfg => { cfg.AddProfile<ApiDtosMappingProfile>();
 var app = builder.Build();
 
 app.MapControllers();
-
+app.UseSwaggerWithUI();
 app.Run();
