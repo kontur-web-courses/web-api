@@ -34,12 +34,18 @@ public class UsersController : Controller
 
     [Produces("application/json", "application/xml")]
     [HttpGet("{userId}", Name = nameof(GetUserById))]
+    [HttpHead("{userId}")]
     public ActionResult<Models.UserDto> GetUserById([FromRoute] System.Guid userId)
     {
         var user = userRepository.FindById(userId);
         if (user is null)
         {
             return NotFound();
+        }
+        if (HttpContext.Request.Method == HttpMethods.Head)
+        {
+            Response.Headers["Content-Type"] = "application/json; charset=utf-8";
+            return Ok();
         }
         var userDto = mapper.Map<Models.UserDto>(user);
         return Ok(userDto);
