@@ -2,6 +2,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
+using System.Net;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
 
@@ -20,14 +21,21 @@ public class UsersController : Controller
         this.mapper = mapper;
     }
 
+    [HttpHead("{userId}")]
     [HttpGet("{userId}", Name = nameof(GetUserById))]
     [Produces("application/json", "application/xml")]
-    public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
+    public ActionResult GetUserById([FromRoute] Guid userId)
     {
         var user = userRepository.FindById(userId);
         if (user == null)
             return NotFound();
         var userDto = mapper.Map<UserDto>(user);
+        if (Request.Method == "HEAD") 
+        {
+            Response.Headers.Append("Content-Type", "application/json; charset=utf-8");
+            return Ok();
+        }
+
         return Ok(userDto);
     }
 
