@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
@@ -38,18 +39,14 @@ public class UsersController : Controller
             return BadRequest();
         
         var createdUserEntity = mapper.Map<UserEntity>(createdUser);
-        
         if (!ModelState.IsValid)
             return UnprocessableEntity(ModelState);
-        
         if (!createdUserEntity.Login.All(char.IsLetterOrDigit))
             ModelState.AddModelError("Login", "Login should contain only letters or digits");
-        
         if (!ModelState.IsValid)
             return UnprocessableEntity(ModelState);
         
         createdUserEntity = userRepository.Insert(createdUserEntity);
-        
         return CreatedAtRoute(
             nameof(GetUserById),
             new { userId = createdUserEntity.Id },
@@ -64,15 +61,35 @@ public class UsersController : Controller
         
         updatedUser.Id = userId;
         var updatedUserEntity = mapper.Map<UserEntity>(updatedUser);
-        
         if (!ModelState.IsValid)
             return UnprocessableEntity(ModelState);
         
         userRepository.UpdateOrInsert(updatedUserEntity, out var isInserted);
-        
         if (isInserted)
             return Created("User not found in repository. Created a new one successfully", updatedUserEntity);
+        return NoContent();
+    }
+
+    [HttpPatch("{userId}")]
+    public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UpdatedUserDto> patchDocument)
+    {
+        if (patchDocument == null)
+            return BadRequest();
+        if (userId == Guid.Empty || userRepository.FindById(userId) == null)
+            return NotFound();
+
+        var updatedUser = new UpdatedUserDto()
+        {
+            Id = userId,
+        };
+        patchDocument.ApplyTo(updatedUser, ModelState);
+        TryValidateModel(updatedUser);
         
+        var updatedUserEntity = mapper.Map<UserEntity>(updatedUser);
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+        
+        userRepository.Update(updatedUserEntity);
         return NoContent();
     }
 }
