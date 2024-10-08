@@ -52,7 +52,7 @@ namespace WebApi.MinimalApi.Controllers
 
             if (user.Login == null || !user.Login.All(char.IsLetterOrDigit))
             {
-                ModelState.AddModelError("login", "massege");
+                ModelState.AddModelError("login", "Login must contain only letters and digits and cannot be empty.");
                 var response = UnprocessableEntity(ModelState);
                 return response;
             }
@@ -68,25 +68,16 @@ namespace WebApi.MinimalApi.Controllers
         [Produces("application/json", "application/xml")]
         public IActionResult UpdateUser([FromRoute] string userId, [FromBody] UpdateUserDto userDto)
         {
-            if (userDto == null)
-            {
-                return BadRequest();
-            }
+            if (userDto == null) return BadRequest();
 
             var validationResult = ValidateUserDto(userDto);
-            if (validationResult != null)
-            {
-                return validationResult;
-            }
+            if (validationResult != null) return validationResult;
 
-            if (!Guid.TryParse(userId, out Guid guidUserId))
-            {
-                return BadRequest();
-            }
+            if (!Guid.TryParse(userId, out Guid guidUserId)) return BadRequest();
 
             var userEntity = mapper.Map(userDto, new UserEntity(guidUserId));
-            
             userRepository.UpdateOrInsert(userEntity, out var isInsert);
+
             return isInsert
                 ? CreatedAtAction(nameof(GetUserById), new { userId = guidUserId }, userId)
                 : NoContent();
@@ -95,25 +86,23 @@ namespace WebApi.MinimalApi.Controllers
         private IActionResult ValidateUserDto(UpdateUserDto userDto)
         {
             if (string.IsNullOrWhiteSpace(userDto.Login) || !userDto.Login.All(char.IsLetterOrDigit))
-            {
-                ModelState.AddModelError("login", "Login must contain only letters and digits and cannot be empty.");
-                return UnprocessableEntity(ModelState);
-            }
+                return AddModelError("login", "Login must contain only letters and digits and cannot be empty.");
 
             if (string.IsNullOrWhiteSpace(userDto.FirstName))
-            {
-                ModelState.AddModelError("firstName", "First name cannot be empty.");
-                return UnprocessableEntity(ModelState);
-            }
+                return AddModelError("firstName", "First name cannot be empty.");
 
             if (string.IsNullOrWhiteSpace(userDto.LastName))
-            {
-                ModelState.AddModelError("lastName", "Last name cannot be empty.");
-                return UnprocessableEntity(ModelState);
-            }
+                return AddModelError("lastName", "Last name cannot be empty.");
 
             return null;
         }
+
+        private IActionResult AddModelError(string fieldName, string message)
+        {
+            ModelState.AddModelError(fieldName, message);
+            return UnprocessableEntity(ModelState);
+        }
+
 
 
 
@@ -121,21 +110,10 @@ namespace WebApi.MinimalApi.Controllers
         [Produces("application/json", "application/xml")]
         public IActionResult PartiallyUpdateUser([FromRoute] string userId, [FromBody] JsonPatchDocument<UpdateUserDto> patchDoc)
         {
-            if (patchDoc == null)
-            {
-                return BadRequest();
-            }
-
-            var validationResult = ValidatePatchDocument(patchDoc);
-            if (validationResult != null)
-            {
-                return validationResult;
-            }
+            if (patchDoc == null) return BadRequest();
 
             if (!Guid.TryParse(userId, out Guid guidUserId))
-            {
                 return NotFound();
-            }
 
             var user = userRepository.FindById(guidUserId);
             if (user == null)
@@ -150,42 +128,10 @@ namespace WebApi.MinimalApi.Controllers
             return ModelState.IsValid ? NoContent() : UnprocessableEntity(ModelState);
         }
 
-        private IActionResult ValidatePatchDocument(JsonPatchDocument<UpdateUserDto> patchDoc)
-        {
-            foreach (var operation in patchDoc.Operations)
-            {
-                if (operation.path == "login")
-                {
-                    if (ContainsSpecialCharacters(operation.value.ToString()))
-                    {
-                        ModelState.AddModelError("login", "Login must not contain special characters.");
-                        return UnprocessableEntity(ModelState);
-                    }
-                    if (string.IsNullOrWhiteSpace(operation.value.ToString()))
-                    {
-                        ModelState.AddModelError("login", "Login cannot be empty.");
-                        return UnprocessableEntity(ModelState);
-                    }
-                }
-                else if (operation.path == "firstName" && string.IsNullOrWhiteSpace(operation.value.ToString()))
-                {
-                    ModelState.AddModelError("firstName", "First name cannot be empty.");
-                    return UnprocessableEntity(ModelState);
-                }
-                else if (operation.path == "lastName" && string.IsNullOrWhiteSpace(operation.value.ToString()))
-                {
-                    ModelState.AddModelError("lastName", "Last name cannot be empty.");
-                    return UnprocessableEntity(ModelState);
-                }
-            }
-            return null;
-        }
 
-        private string SanitizeUserId(string userId)
-        {
-            return userId.Replace("\r\n", "").Replace("++", "").Replace("+", "");
-        }
-        
+
+
+
         [HttpDelete("{userId}")]
         public IActionResult DeleteUser([FromRoute] string userId)
         {
@@ -226,7 +172,7 @@ namespace WebApi.MinimalApi.Controllers
 
         [HttpGet]
         [Produces("application/json", "application/xml")]
-        public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        public IActionResult GetUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
 
             if (pageNumber < 1) pageNumber = 1;
@@ -265,24 +211,6 @@ namespace WebApi.MinimalApi.Controllers
             Response.Headers.Add("Allow", "GET, POST, OPTIONS");
 
             return Ok();
-        }
-
-
-        // Метод для проверки, является ли строка корректным JSON
-        private bool IsValidJson(string str)
-        {
-            // Попробуем десериализовать строку, чтобы проверить, является ли она корректным JSON
-            str = str.Trim();
-            return (str.StartsWith("{") && str.EndsWith("}")) || (str.StartsWith("[") && str.EndsWith("]"));
-        }
-
-        static bool ContainsSpecialCharacters(string str)
-        {
-            // регулярное выражение для проверки на наличие специальных символов
-            string pattern = @"[^a-zA-Z0-9а-яА-ЯёЁ]";
-
-            // Проверяем, соответствует ли строка шаблону
-            return Regex.IsMatch(str, pattern);
         }
 
     }

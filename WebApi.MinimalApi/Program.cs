@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using WebApi.MinimalApi.Models;
 using System;
-using static WebApi.MinimalApi.Controllers.UsersController;
+
 using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json;
 
