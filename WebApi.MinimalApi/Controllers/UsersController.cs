@@ -19,14 +19,16 @@ public class UsersController : Controller
         this.userRepository = userRepository;
         this.mapper = mapper;
     }
-
-    [HttpGet("{userId}", Name = nameof(GetUserById))]
+    
     [HttpHead("{userId}")]
+    [HttpGet("{userId}", Name = nameof(GetUserById))]
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
         var user = userRepository.FindById(userId);
         if (user == null)
             return NotFound();
+        if (HttpMethods.IsHead(HttpContext.Request.Method))
+            Response.Body = Stream.Null;
         var userDto = mapper.Map<UserDto>(user);
         return Ok(userDto);
     }
