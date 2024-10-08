@@ -38,7 +38,7 @@ public class UsersController : Controller
             return BadRequest();
         if (ModelState.IsValid && !user.Login.All(char.IsLetterOrDigit))
             ModelState.AddModelError("Login", "Unaccepted symbols, only letter or digits are acceptable");
-        if(!ModelState.IsValid)
+        if (!ModelState.IsValid)
             return UnprocessableEntity(ModelState);
         var userEntity = mapper.Map<UserEntity>(user);
         var insetedUser = userRepository.Insert(userEntity);
@@ -46,5 +46,25 @@ public class UsersController : Controller
             nameof(GetUserById),
             new { userId = insetedUser.Id },
             insetedUser.Id);
+    }
+
+    [HttpPut("{userToUpdateId}")]
+    [Produces("application/json", "application/xml")]
+    public IActionResult UpdateUser([FromBody] UserUpdateDto user, [FromRoute] Guid userToUpdateId)
+    {
+        if (user == null || userToUpdateId == Guid.Empty)
+            return BadRequest();
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+        var userEntity = new UserEntity(userToUpdateId);
+        userEntity = mapper.Map(user, userEntity);
+        var isInserted = false;
+        userRepository.UpdateOrInsert(userEntity,out isInserted);
+        if (isInserted)
+            return CreatedAtRoute(
+                nameof(GetUserById),
+                new { userId = userToUpdateId},
+                userToUpdateId);
+        return NoContent();
     }
 }

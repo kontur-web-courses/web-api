@@ -34,6 +34,7 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.CreateMap<UserEntity, UserDto>()
         .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.LastName} {src.FirstName}"));
     cfg.CreateMap<UserCreationDto, UserEntity>();
+    cfg.CreateMap<UserUpdateDto, UserEntity>();
 }, new System.Reflection.Assembly[0]);
 var app = builder.Build();
 
