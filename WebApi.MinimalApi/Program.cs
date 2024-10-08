@@ -4,6 +4,7 @@ using Newtonsoft.Json.Serialization;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
 using WebApi.MinimalApi.Controllers;
+using Guid = WebApi.MinimalApi.Controllers.Guid;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://localhost:5000");
@@ -12,7 +13,7 @@ builder.Services.AddAutoMapper(cfg =>
 {
     cfg.CreateMap<UserEntity, UserDto>()
         .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}"));
-    cfg.CreateMap<guid, UserEntity>();
+    cfg.CreateMap<Guid, UserEntity>();
 }, new System.Reflection.Assembly[0]);
 builder.Services.AddControllers(options =>
     {

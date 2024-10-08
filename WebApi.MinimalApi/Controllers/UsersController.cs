@@ -1,13 +1,14 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
 
 namespace WebApi.MinimalApi.Controllers;
 
-public class guid
+public class Guid
 {
     [Required]
     public string Login { get; set; }
@@ -33,7 +34,7 @@ public class UsersController : Controller
 
     [Produces("application/json", "application/xml")]
     [HttpGet("{userId}", Name = nameof(GetUserById))]
-    public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
+    public ActionResult<UserDto> GetUserById([FromRoute] System.Guid userId)
     {
         var user = userRepository.FindById(userId);
         if (user is null)
@@ -46,7 +47,7 @@ public class UsersController : Controller
     
     [Produces("application/json", "application/xml")]
     [HttpPost]
-    public IActionResult CreateUser([FromBody] guid user)
+    public IActionResult CreateUser([FromBody] Guid user)
     {
         var createdUserEntity = mapper.Map<UserEntity>(user);
         if (user == null)
@@ -59,11 +60,22 @@ public class UsersController : Controller
             ModelState.AddModelError(nameof(user.Login), "Сообщение об ошибке");
             return UnprocessableEntity(ModelState);
         }
-        
+        var insertedUser = userRepository.Insert(createdUserEntity);
         return CreatedAtRoute(
             nameof(GetUserById),
-            new { userId = createdUserEntity.Id },
-            user);
+            new { userId = insertedUser.Id },
+            insertedUser.Id);
     }
-
+    
+    [HttpDelete("{userId}")]
+    public IActionResult DeleteUser([FromBody] string userId)
+    {
+        // var user = userRepository.FindById(userId);
+        // if (user == null)
+        // {
+        //     return NotFound();
+        // }
+        // userRepository.Delete(userId);
+        return NoContent();
+    }
 }
