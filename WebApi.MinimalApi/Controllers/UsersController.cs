@@ -40,9 +40,7 @@ namespace WebApi.MinimalApi.Controllers
 
             return Ok(userDto);
         }
-
         
-
         [HttpPost]
         [Produces("application/json", "application/xml")]
         public IActionResult CreateUser([FromBody] guid user)
@@ -61,17 +59,15 @@ namespace WebApi.MinimalApi.Controllers
 
             var userEntity = mapper.Map<UserEntity>(user);
 
-            userRepository.Insert(userEntity);
+            userEntity = userRepository.Insert(userEntity);
 
-            return CreatedAtAction(nameof(GetUserById), new { userId = userEntity.Id, login = userEntity.Login }, user);
+            return CreatedAtAction(nameof(GetUserById), new { userId = userEntity.Id, login = userEntity.Login }, userEntity.Id);
         }
 
         [HttpPut("{userId}")]
         [Produces("application/json", "application/xml")]
         public IActionResult UpdateUser([FromRoute] string userId, [FromBody] UpdateUserDto userDto)
         {
-            var pageList = userRepository.GetPage(1, 10);
-
             if (userDto == null)
             {
                 return BadRequest();
@@ -83,24 +79,14 @@ namespace WebApi.MinimalApi.Controllers
                 return validationResult;
             }
 
-            var sanitizedUserId = SanitizeUserId(userId);
-            if (IsValidJson(sanitizedUserId))
-            {
-                //чего-то не хватает
-                //но почему-то работает
-                return NoContent();
-            }
-
             if (!Guid.TryParse(userId, out Guid guidUserId))
             {
                 return BadRequest();
             }
 
             var userEntity = mapper.Map(userDto, new UserEntity(guidUserId));
-            var isInsert = false;
-
-            userRepository.UpdateOrInsert(userEntity, out isInsert);
-
+            
+            userRepository.UpdateOrInsert(userEntity, out var isInsert);
             return isInsert
                 ? CreatedAtAction(nameof(GetUserById), new { userId = guidUserId }, userId)
                 : NoContent();
@@ -144,12 +130,6 @@ namespace WebApi.MinimalApi.Controllers
             if (validationResult != null)
             {
                 return validationResult;
-            }
-
-            var sanitizedUserId = SanitizeUserId(userId);
-            if (IsValidJson(sanitizedUserId))
-            {
-                return NoContent();
             }
 
             if (!Guid.TryParse(userId, out Guid guidUserId))
@@ -205,52 +185,10 @@ namespace WebApi.MinimalApi.Controllers
         {
             return userId.Replace("\r\n", "").Replace("++", "").Replace("+", "");
         }
-
-
+        
         [HttpDelete("{userId}")]
         public IActionResult DeleteUser([FromRoute] string userId)
         {
-
-            var str = userId.Replace("\r\n", "")
-                .Replace("++", "")
-                .Replace(":+", ":")
-                .Replace("login", "Login")
-                .Replace("lastName", "LastName")
-                .Replace("firstName", "FirstName")
-                .Replace("+", " ");
-            // хрень с replace надо точно исправлять...
-
-            if (IsValidJson(str))
-            {
-                var jsonUserId = JsonConvert.DeserializeObject<dynamic>(str);
-
-
-                
-                var userEntity = userRepository.GetOrCreateByLogin((jsonUserId.Login).ToString());
-
-
-
-                if (jsonUserId.LastName != userEntity.LastName || jsonUserId.FirstName != userEntity.FirstName)// выглядит странно...
-                {
-                    userRepository.Delete(userEntity.Id);
-                    return NotFound();
-                }
-
-                if (!Guid.TryParse(jsonUserId.ToString(), out Guid guidJsonUserId))
-                {
-                    
-                    userRepository.Delete(userEntity.Id);
-                    return NoContent();
-                }
-                var Entitiuser = userRepository.FindById(guidJsonUserId);
-                if (Entitiuser == null)
-                {
-                    return NotFound();
-                }
-                userRepository.Delete(Entitiuser.Id);
-                return NoContent();
-            }
-
             if (!Guid.TryParse(userId, out Guid guidUserId))
             {
                 return NotFound();
@@ -265,9 +203,6 @@ namespace WebApi.MinimalApi.Controllers
             userRepository.Delete(user.Id);
             return NoContent();
         }
-
-
-
         
         [HttpHead("{userId}")]
         public IActionResult GetUserById([FromRoute] string userId)
