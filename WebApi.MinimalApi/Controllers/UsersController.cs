@@ -20,10 +20,14 @@ public class UsersController : Controller
         this.mapper = mapper;
     }
 
+    [HttpHead("{userId}")]
     [HttpGet("{userId}", Name = nameof(GetUserById))]
     [Produces("application/json", "application/xml")]
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
+        if (Request.Method == "HEAD")
+            Response.Body = Stream.Null;
+        
         var user = userRepository.FindById(userId);
         
         if (user == null)
@@ -100,7 +104,6 @@ public class UsersController : Controller
     [Produces("application/json", "application/xml")]
     public IActionResult DeleteUser([FromRoute] Guid userId)
     {
-        // test4 не проходит и тут что-то странное спрошу на паре мб а пока скип
         if (userId == Guid.Empty || userRepository.FindById(userId) == null)
             return NotFound();
         
