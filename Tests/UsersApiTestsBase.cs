@@ -96,13 +96,13 @@ namespace Tests
             return createdUserId;
         }
 
-        protected void DeleteUser(string userId)
+        protected async void DeleteUser(string userId)
         {
             var request = new HttpRequestMessage();
             request.Method = HttpMethod.Delete;
             request.RequestUri = BuildUsersByIdUri(userId);
             request.Headers.Add("Accept", "*/*");
-            var response = HttpClient.Send(request);
+            var response = await HttpClient.SendAsync(request);
 
             response.StatusCode.Should().Be(HttpStatusCode.NoContent);
             response.ShouldNotHaveHeader("Content-Type");
