@@ -3,18 +3,13 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
+using WebApi.MinimalApi.Samples;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.WebHost.UseUrls("http://localhost:5001");
 
 builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
-
-builder.Services.AddControllers()
-    .ConfigureApiBehaviorOptions(options => {
-        options.SuppressModelStateInvalidFilter = true;
-        options.SuppressMapClientErrors = true;
-    });
 
 builder.Services.AddControllers(options =>
     {
@@ -41,9 +36,11 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.CreateMap<UpdatedUserDto, UserEntity>();
 }, new System.Reflection.Assembly[0]);
 
+builder.Services.AddSwaggerGeneration();
 
 var app = builder.Build();
 
 app.MapControllers();
+app.UseSwaggerWithUI();
 
 app.Run();
