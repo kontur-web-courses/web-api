@@ -102,23 +102,24 @@ public class UsersController : Controller
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        pageSize = Math.Clamp(pageSize,1, 20);
-        if (pageNumber < 1) pageNumber = 1;
-        var totalCount = userRepository.GetPage(1, int.MaxValue).Count;
+        pageSize = Math.Clamp(pageSize, 1, 20);
+        pageNumber = Math.Max(pageNumber, 1);
+        var pageList = userRepository.GetPage(pageNumber, pageSize);
         var paginationInfo = new
         {
-            previousPageLink = pageNumber == 1 
-                ? null
-                : linkGenerator.GetUriByRouteValues(HttpContext, nameof(GetUsers), new { pageNumber = pageNumber - 1, pageSize }),
-            nextPageLink = linkGenerator.GetUriByRouteValues(HttpContext, nameof(GetUsers), new { pageNumber = pageNumber + 1, pageSize }),
-            totalCount,
-            pageSize,
-            currentPage = pageNumber,
-            totalPages = Math.Ceiling(1f * totalCount / pageSize),
+            previousPageLink = pageList.HasPrevious
+                ? linkGenerator.GetUriByRouteValues(HttpContext, nameof(GetUsers), new { pageNumber = pageNumber - 1, pageSize })
+                : null,
+            nextPageLink = pageList.HasNext
+                ? linkGenerator.GetUriByRouteValues(HttpContext, nameof(GetUsers), new { pageNumber = pageNumber + 1, pageSize })
+                : null,
+            pageList.TotalCount,
+            pageList.PageSize,
+            pageList.CurrentPage,
+            pageList.TotalPages,
         };
         Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationInfo));
-        var entities = userRepository.GetPage(pageNumber, pageSize);
-        return Ok(mapper.Map<IEnumerable<UserDto>>(entities));
+        return Ok(mapper.Map<IEnumerable<UserDto>>(pageList));
     }
 
     [HttpOptions]
