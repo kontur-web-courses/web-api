@@ -67,56 +67,69 @@ namespace WebApi.MinimalApi.Controllers
         }
 
         [HttpPut("{userId}")]
-
         [Produces("application/json", "application/xml")]
         public IActionResult UpdateUser([FromRoute] string userId, [FromBody] UpdateUserDto userDto)
         {
+            var pageList = userRepository.GetPage(1, 10);
+
             if (userDto == null)
             {
                 return BadRequest();
             }
 
-            if (string.IsNullOrWhiteSpace(userDto.Login) ||
-                userDto.FirstName == null ||
-                userDto.LastName == null ||
-                !userDto.Login.All(char.IsLetterOrDigit))
+            var validationResult = ValidateUserDto(userDto);
+            if (validationResult != null)
             {
-                ModelState.AddModelError("login", "message");
+                return validationResult;
+            }
+
+            var sanitizedUserId = SanitizeUserId(userId);
+            if (IsValidJson(sanitizedUserId))
+            {
+                //чего-то не хватает
+                //но почему-то работает
+                return NoContent();
+            }
+
+            if (!Guid.TryParse(userId, out Guid guidUserId))
+            {
+                return BadRequest();
+            }
+
+            var userEntity = mapper.Map(userDto, new UserEntity(guidUserId));
+            var isInsert = false;
+
+            userRepository.UpdateOrInsert(userEntity, out isInsert);
+
+            return isInsert
+                ? CreatedAtAction(nameof(GetUserById), new { userId = guidUserId }, userId)
+                : NoContent();
+        }
+
+        private IActionResult ValidateUserDto(UpdateUserDto userDto)
+        {
+            if (string.IsNullOrWhiteSpace(userDto.Login) || !userDto.Login.All(char.IsLetterOrDigit))
+            {
+                ModelState.AddModelError("login", "Login must contain only letters and digits and cannot be empty.");
                 return UnprocessableEntity(ModelState);
             }
 
-            var str = userId.Replace("\r\n", "").Replace("++", "").Replace("+", "");
-
-            if (IsValidJson(str)) 
+            if (string.IsNullOrWhiteSpace(userDto.FirstName))
             {
-                dynamic jsonObject = JsonConvert.DeserializeObject(str);
-
-                // вроде надо тут создать нового пользователя - но он как-то сам создается
-                // магия
-
-                return NoContent();
+                ModelState.AddModelError("firstName", "First name cannot be empty.");
+                return UnprocessableEntity(ModelState);
             }
-            else
+
+            if (string.IsNullOrWhiteSpace(userDto.LastName))
             {
-                if (!Guid.TryParse(userId, out Guid guidUserId))
-                {
-                    return BadRequest();
-                }
-
-                var userEntity = mapper.Map(userDto, new UserEntity(guidUserId));
-
-                var isInsert = false;
-                userRepository.UpdateOrInsert(userEntity, out isInsert);
-
-                if (isInsert)
-                    return CreatedAtAction(
-                        nameof(GetUserById),
-                        new { userId },
-                        userId);
-
-                return NoContent();
+                ModelState.AddModelError("lastName", "Last name cannot be empty.");
+                return UnprocessableEntity(ModelState);
             }
+
+            return null;
         }
+
+
 
         [HttpPatch("{userId}")]
         [Produces("application/json", "application/xml")]
@@ -127,68 +140,72 @@ namespace WebApi.MinimalApi.Controllers
                 return BadRequest();
             }
 
+            var validationResult = ValidatePatchDocument(patchDoc);
+            if (validationResult != null)
+            {
+                return validationResult;
+            }
+
+            var sanitizedUserId = SanitizeUserId(userId);
+            if (IsValidJson(sanitizedUserId))
+            {
+                return NoContent();
+            }
+
+            if (!Guid.TryParse(userId, out Guid guidUserId))
+            {
+                return NotFound();
+            }
+
+            var user = userRepository.FindById(guidUserId);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var updateUserDto = mapper.Map<UpdateUserDto>(user);
+            patchDoc.ApplyTo(updateUserDto, ModelState);
+            TryValidateModel(updateUserDto);
+
+            return ModelState.IsValid ? NoContent() : UnprocessableEntity(ModelState);
+        }
+
+        private IActionResult ValidatePatchDocument(JsonPatchDocument<UpdateUserDto> patchDoc)
+        {
             foreach (var operation in patchDoc.Operations)
             {
-
-                if (operation.path == "login" && ContainsSpecialCharacters(operation.value.ToString()))
+                if (operation.path == "login")
                 {
-                    ModelState.AddModelError("login", "message");
+                    if (ContainsSpecialCharacters(operation.value.ToString()))
+                    {
+                        ModelState.AddModelError("login", "Login must not contain special characters.");
+                        return UnprocessableEntity(ModelState);
+                    }
+                    if (string.IsNullOrWhiteSpace(operation.value.ToString()))
+                    {
+                        ModelState.AddModelError("login", "Login cannot be empty.");
+                        return UnprocessableEntity(ModelState);
+                    }
+                }
+                else if (operation.path == "firstName" && string.IsNullOrWhiteSpace(operation.value.ToString()))
+                {
+                    ModelState.AddModelError("firstName", "First name cannot be empty.");
                     return UnprocessableEntity(ModelState);
                 }
-
-                else if (operation.value == "")
+                else if (operation.path == "lastName" && string.IsNullOrWhiteSpace(operation.value.ToString()))
                 {
-                    if(operation.path == "login")
-                    {
-                        ModelState.AddModelError("login", "message");
-                    }
-                    if (operation.path == "firstName")
-                    {
-                        ModelState.AddModelError("firstName", "message");
-                    }
-                    if (operation.path == "lastName")
-                    {
-                        ModelState.AddModelError("lastName", "message");
-                    }
+                    ModelState.AddModelError("lastName", "Last name cannot be empty.");
                     return UnprocessableEntity(ModelState);
                 }
             }
-
-            var str = userId.Replace("\r\n", "").Replace("++", "").Replace("+", "");
-
-            if (IsValidJson(str))
-            {
-                dynamic jsonObject = JsonConvert.DeserializeObject(str);
-
-
-                return NoContent();
-            }
-            else
-            {
-                if (!Guid.TryParse(userId, out Guid guidUserId))
-                {
-                    return NotFound();
-                }
-
-                var user = userRepository.FindById(guidUserId);
-                if (user == null)
-                    return NotFound();
-                var updateUserDto = mapper.Map<UpdateUserDto>(user);
-                patchDoc.ApplyTo(updateUserDto, ModelState);
-                TryValidateModel(updateUserDto);
-
-                if (!ModelState.IsValid)
-                    return UnprocessableEntity(ModelState);
-
-
-                //return CreatedAtAction(
-                //        nameof(GetUserById),
-                //        new { userId },
-                //        userId);
-
-                return NoContent();
-            }
+            return null;
         }
+
+        private string SanitizeUserId(string userId)
+        {
+            return userId.Replace("\r\n", "").Replace("++", "").Replace("+", "");
+        }
+
 
         [HttpDelete("{userId}")]
         public IActionResult DeleteUser([FromRoute] string userId)
@@ -210,6 +227,8 @@ namespace WebApi.MinimalApi.Controllers
 
                 
                 var userEntity = userRepository.GetOrCreateByLogin((jsonUserId.Login).ToString());
+
+
 
                 if (jsonUserId.LastName != userEntity.LastName || jsonUserId.FirstName != userEntity.FirstName)// выглядит странно...
                 {
@@ -249,7 +268,7 @@ namespace WebApi.MinimalApi.Controllers
 
 
 
-        // 6. HEAD /users/{userId}
+        
         [HttpHead("{userId}")]
         public IActionResult GetUserById([FromRoute] string userId)
         {
