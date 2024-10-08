@@ -7,7 +7,6 @@ using WebApi.MinimalApi.Models;
 namespace WebApi.MinimalApi.Controllers;
 
 [Route("api/[controller]")]
-[Produces("application/json", "application/xml")]
 [ApiController]
 public class UsersController : Controller
 {
@@ -22,6 +21,7 @@ public class UsersController : Controller
     }
 
     [HttpGet("{userId}", Name = nameof(GetUserById))]
+    [Produces("application/json", "application/xml")]
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
         var user = userRepository.FindById(userId);
@@ -33,6 +33,7 @@ public class UsersController : Controller
     }
 
     [HttpPost]
+    [Produces("application/json", "application/xml")]
     public IActionResult CreateUser([FromBody] CreatedUserDto createdUser)
     {
         if (createdUser == null)
@@ -54,6 +55,7 @@ public class UsersController : Controller
     }
 
     [HttpPut("{userId}")]
+    [Produces("application/json", "application/xml")]
     public IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] UpdatedUserDto updatedUser)
     {
         if (updatedUser == null || userId == Guid.Empty)
@@ -71,6 +73,7 @@ public class UsersController : Controller
     }
 
     [HttpPatch("{userId}")]
+    [Produces("application/json", "application/xml")]
     public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UpdatedUserDto> patchDocument)
     {
         if (patchDocument == null)
@@ -90,6 +93,18 @@ public class UsersController : Controller
             return UnprocessableEntity(ModelState);
         
         userRepository.Update(updatedUserEntity);
+        return NoContent();
+    }
+
+    [HttpDelete("{userId}")]
+    [Produces("application/json", "application/xml")]
+    public IActionResult DeleteUser([FromRoute] Guid userId)
+    {
+        // test4 не проходит и тут что-то странное спрошу на паре мб а пока скип
+        if (userId == Guid.Empty || userRepository.FindById(userId) == null)
+            return NotFound();
+        
+        userRepository.Delete(userId);
         return NoContent();
     }
 }
