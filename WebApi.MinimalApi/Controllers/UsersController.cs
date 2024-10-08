@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json;
+﻿using System.Text.Json;
 using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -97,7 +96,7 @@ public class UsersController : Controller
         return NoContent();
     }
 
-    [HttpGet(Name = "get-pages")]
+    [HttpGet(Name = nameof(GetUsers))]
     [Produces("application/json", "application/xml")]
     public ActionResult<IEnumerable<UserDto>> GetUsers(
         [FromQuery] int pageNumber = 1,
@@ -110,8 +109,8 @@ public class UsersController : Controller
         {
             previousPageLink = pageNumber == 1 
                 ? null
-                : linkGenerator.GetUriByName(HttpContext, "get-pages", new { pageNumber = pageNumber - 1, pageSize }),
-            nextPageLink = linkGenerator.GetUriByName(HttpContext, "get-pages", new { pageNumber = pageNumber + 1, pageSize }),
+                : linkGenerator.GetUriByRouteValues(HttpContext, nameof(GetUsers), new { pageNumber = pageNumber - 1, pageSize }),
+            nextPageLink = linkGenerator.GetUriByRouteValues(HttpContext, nameof(GetUsers), new { pageNumber = pageNumber + 1, pageSize }),
             totalCount,
             pageSize,
             currentPage = pageNumber,
