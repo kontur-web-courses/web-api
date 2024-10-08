@@ -28,7 +28,7 @@ public class UsersController : Controller
     [HttpGet("{userId}", Name = nameof(GetUserById))]
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
-        if (Request.Method == "HEAD")
+        if (HttpMethods.IsHead(Request.Method))
         {
             Response.Body = Stream.Null;
         }
@@ -44,20 +44,19 @@ public class UsersController : Controller
     }
 
     [HttpPost]
-    public IActionResult CreateUser([FromBody] CreateUserDto user)
+    public IActionResult CreateUser([FromBody] CreateUserDto userDto)
     {
-        if (user is null)
+        if (userDto is null)
         {
             return BadRequest();
         }
 
-        var userEntity = mapper.Map<UserEntity>(user);
         if (!ModelState.IsValid)
         {
             return UnprocessableEntity(ModelState);
         }
 
-        if (!userEntity.Login.All(char.IsLetterOrDigit))
+        if (!userDto.Login.All(char.IsLetterOrDigit))
         {
             ModelState.AddModelError("Login", "Login should contain only letters or digits");
         }
@@ -65,6 +64,7 @@ public class UsersController : Controller
         {
             return UnprocessableEntity(ModelState);
         }
+        var userEntity = mapper.Map<UserEntity>(userDto);
 
         userEntity = userRepository.Insert(userEntity);
 
@@ -75,24 +75,28 @@ public class UsersController : Controller
     }
 
     [HttpPut("{userId}")]
-    public IActionResult UpsertUserById([FromRoute] Guid userId, [FromBody] UpdateUserDto user)
+    public IActionResult UpsertUserById([FromRoute] Guid userId, [FromBody] UpdateUserDto userDto)
     {
-        if (user is null || userId == Guid.Empty)
+        if (userDto is null || userId == Guid.Empty)
         {
             return BadRequest();
         }
 
-        user.Id = userId;
-        var userEntity = mapper.Map<UserEntity>(user);
+        userDto.Id = userId;
         if (!ModelState.IsValid)
         {
             return UnprocessableEntity(ModelState);
         }
+        var userEntity = mapper.Map<UserEntity>(userDto);
 
         userRepository.UpdateOrInsert(userEntity, out var isInserted);
         if (isInserted)
         {
-            return Created("New user created successfully", userEntity);
+            return CreatedAtRoute(
+                nameof(GetUserById),
+                new { userId = userEntity.Id },
+                userEntity.Id
+            );
         }
         return NoContent();
     }
@@ -109,24 +113,25 @@ public class UsersController : Controller
             return NotFound();
         }
 
-        var user = new UpdateUserDto()
-        {
-            Id = userId,
-        };
-        patchDoc.ApplyTo(user);
-        TryValidateModel(user);
-
-        var userEntity = mapper.Map<UserEntity>(user);
-        if (!ModelState.IsValid)
-        {
-            return UnprocessableEntity(ModelState);
-        }
-
         var existingUser = userRepository.FindById(userId);
         if (existingUser is null)
         {
             return NotFound();
         }
+
+        var userDto = new UpdateUserDto()
+        {
+            Id = userId,
+        };
+        patchDoc.ApplyTo(userDto, ModelState);
+        TryValidateModel(userDto);
+
+        if (!ModelState.IsValid)
+        {
+            return UnprocessableEntity(ModelState);
+        }
+
+        var userEntity = mapper.Map<UserEntity>(userDto);
         userRepository.Update(userEntity);
         return NoContent();
     }
@@ -143,21 +148,17 @@ public class UsersController : Controller
         return NoContent();
     }
 
-    [HttpGet]
-    public IActionResult GetAllUsers([FromQuery] int? pageNumber, [FromQuery] int? pageSize)
+    [HttpGet(Name = nameof(GetAllUsers))]
+    public IActionResult GetAllUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
-        pageNumber = pageNumber ?? 1;
-        pageNumber = Math.Max((int)pageNumber, 1);
-        pageSize = pageSize ?? 10;
-        pageSize = Math.Max((int)pageSize, 1);
-        pageSize = Math.Min((int)pageSize, 20);
+        pageNumber = Math.Max(pageNumber, 1);
+        pageSize = Math.Clamp(pageSize, 1, 20);
 
-        var pageList = userRepository.GetPage((int)pageNumber, (int)pageSize);
-        var users = mapper.Map<IEnumerable<UserDto>>(pageList);
+        var pageList = userRepository.GetPage(pageNumber, pageSize);
 
         var previousPageLink = pageList.HasPrevious ? linkGenerator.GetUriByRouteValues(
             HttpContext,
-            "",
+            nameof(GetAllUsers),
             new
             {
                 pageNumber = pageList.CurrentPage - 1,
@@ -166,7 +167,7 @@ public class UsersController : Controller
         ) : null;
         var nextPageLink = pageList.HasNext ? linkGenerator.GetUriByRouteValues(
             HttpContext,
-            "",
+            nameof(GetAllUsers),
             new
             {
                 pageNumber = pageList.CurrentPage + 1,
@@ -184,6 +185,7 @@ public class UsersController : Controller
         };
         Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(paginationHeader));
 
+        var users = mapper.Map<IEnumerable<UserDto>>(pageList);
         return Ok(users);
     }
 
