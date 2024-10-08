@@ -2,6 +2,7 @@
 using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 using Newtonsoft.Json;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
@@ -139,5 +140,13 @@ public class UsersController : Controller
         };
         Response.Headers.Append("X-Pagination", JsonConvert.SerializeObject(paginationHeader));
         return Ok(users);
+    }
+
+    [HttpOptions]
+    public IActionResult UsersOptions()
+    {
+        var allowedMethods = new[] { HttpMethods.Post, HttpMethods.Get, HttpMethods.Options };
+        Response.Headers.AppendList(HeaderNames.Allow, allowedMethods);
+        return Ok();
     }
 }
