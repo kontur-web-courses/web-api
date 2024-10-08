@@ -8,7 +8,7 @@ using WebApi.MinimalApi.Models;
 
 namespace WebApi.MinimalApi.Controllers;
 
-public class Guid
+public class UserDto
 {
     [Required]
     public string Login { get; set; }
@@ -34,20 +34,20 @@ public class UsersController : Controller
 
     [Produces("application/json", "application/xml")]
     [HttpGet("{userId}", Name = nameof(GetUserById))]
-    public ActionResult<UserDto> GetUserById([FromRoute] System.Guid userId)
+    public ActionResult<Models.UserDto> GetUserById([FromRoute] System.Guid userId)
     {
         var user = userRepository.FindById(userId);
         if (user is null)
         {
             return NotFound();
         }
-        var userDto = mapper.Map<UserDto>(user);
+        var userDto = mapper.Map<Models.UserDto>(user);
         return Ok(userDto);
     }
     
     [Produces("application/json", "application/xml")]
     [HttpPost]
-    public IActionResult CreateUser([FromBody] Guid user)
+    public IActionResult CreateUser([FromBody] UserDto user)
     {
         var createdUserEntity = mapper.Map<UserEntity>(user);
         if (user == null)
@@ -68,7 +68,7 @@ public class UsersController : Controller
     }
     
     [HttpDelete("{userId}")]
-    public IActionResult DeleteUser([FromBody] string userId)
+    public IActionResult DeleteUser([FromBody] String userId)
     {
         // var user = userRepository.FindById(userId);
         // if (user == null)

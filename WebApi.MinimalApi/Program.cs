@@ -4,16 +4,16 @@ using Newtonsoft.Json.Serialization;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
 using WebApi.MinimalApi.Controllers;
-using Guid = WebApi.MinimalApi.Controllers.Guid;
+using UserDto = WebApi.MinimalApi.Controllers.UserDto;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://localhost:5000");
 builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
 builder.Services.AddAutoMapper(cfg =>
 {
-    cfg.CreateMap<UserEntity, UserDto>()
+    cfg.CreateMap<UserEntity, WebApi.MinimalApi.Models.UserDto>()
         .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.FirstName} {src.LastName}"));
-    cfg.CreateMap<Guid, UserEntity>();
+    cfg.CreateMap<UserDto, UserEntity>();
 }, new System.Reflection.Assembly[0]);
 builder.Services.AddControllers(options =>
     {
