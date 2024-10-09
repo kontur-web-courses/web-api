@@ -35,8 +35,20 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.CreateMap<CreateUserRequest, UserEntity>();
     cfg.CreateMap<UpdateUserRequest, UserEntity>();
 }, Array.Empty<Assembly>());
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+});
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseRouting();
 app.MapGet("/test", () => "Test");

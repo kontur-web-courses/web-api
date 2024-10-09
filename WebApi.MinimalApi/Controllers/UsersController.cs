@@ -10,6 +10,7 @@ namespace WebApi.MinimalApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Produces("application/json", "application/xml")]
 public class UsersController : Controller
 {
     private readonly IUserRepository userRepository;
@@ -24,9 +25,13 @@ public class UsersController : Controller
         this.linkGenerator = linkGenerator;
     }
 
+    /// <summary>
+    /// Returns user by its id
+    /// </summary>
     [HttpHead("{userId}")]
     [HttpGet("{userId}")]
-    [Produces("application/json", "application/xml")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
         if (HttpMethods.IsHead(Request.Method))
@@ -35,8 +40,13 @@ public class UsersController : Controller
         return user is not null ? Ok(mapper.Map<UserDto>(user)) : NotFound();
     }
 
+    /// <summary>
+    /// Creates user and returns its id
+    /// </summary>
     [HttpPost]
-    [Produces("application/json", "application/xml")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public IActionResult CreateUser([FromBody] CreateUserRequest request)
     {
         if (request is null)
@@ -50,8 +60,14 @@ public class UsersController : Controller
         return CreatedAtAction(nameof(GetUserById), new { userId = result.Id }, result.Id);
     }
 
+    /// <summary>
+    /// Changes user by id or creates if doesn't exist
+    /// </summary>
     [HttpPut("{userId}")]
-    [Produces("application/json", "application/xml")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public IActionResult UpsertUser([FromRoute] Guid userId, [FromBody] UpdateUserRequest request)
     {
         if (request is null || userId == Guid.Empty)
@@ -66,8 +82,14 @@ public class UsersController : Controller
             : NoContent();
     }
 
+    /// <summary>
+    /// Updates user data
+    /// </summary>
     [HttpPatch("{userId}")]
-    [Produces("application/json", "application/xml")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UpdateUserRequest> patchDoc)
     {
         if (patchDoc is null)
@@ -86,8 +108,12 @@ public class UsersController : Controller
         return NoContent();
     }
 
+    /// <summary>
+    /// Deletes user
+    /// </summary>
     [HttpDelete("{userId}")]
-    [Produces("application/json", "application/xml")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public IActionResult DeleteUser([FromRoute] Guid userId)
     {
         if (userRepository.FindById(userId) is null)
@@ -96,8 +122,11 @@ public class UsersController : Controller
         return NoContent();
     }
 
+    /// <summary>
+    /// Get all users
+    /// </summary>
     [HttpGet(Name = nameof(GetUsers))]
-    [Produces("application/json", "application/xml")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public ActionResult<IEnumerable<UserDto>> GetUsers(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
@@ -123,6 +152,7 @@ public class UsersController : Controller
     }
 
     [HttpOptions]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     public IActionResult Options()
     {
         var allowedMethods = new[] { HttpMethods.Get, HttpMethods.Options, HttpMethods.Post };
