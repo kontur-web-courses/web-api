@@ -7,7 +7,7 @@ namespace WebApi.MinimalApi.Samples;
 
 public static class SwaggerExtensions
 {
-    public static void AddSwaggerGeneration(this IServiceCollection services)
+    public static IServiceCollection AddSwaggerGeneration(this IServiceCollection services)
     {
         services.AddSwaggerGen(c =>
         {
@@ -26,6 +26,7 @@ public static class SwaggerExtensions
             // Конфигурируем Swashbuckle, чтобы работали атрибуты
             c.EnableAnnotations();
         });
+        return services;
     }
 
     public static void UseSwaggerWithUI(this IApplicationBuilder app)
