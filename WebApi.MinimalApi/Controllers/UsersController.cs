@@ -122,7 +122,7 @@ public class UsersController : Controller
         return NoContent();
     }
 
-    [HttpGet]
+    [HttpGet(Name = "GetUsers")]
     public IActionResult GetUsers([FromQuery] int? pageNumber, [FromQuery] int? pageSize)
     {
         var page = pageNumber.GetValueOrDefault(1);
@@ -137,9 +137,8 @@ public class UsersController : Controller
         
         var pageList = userRepository.GetPage(page, size);
         
-        var basePath = "/api/users";
-        var prev = pageList.HasPrevious ? $"{basePath}?pageNumber={page-1}&pageSize={size}" : null;
-        var next = pageList.HasNext ? $"{basePath}?pageNumber={page+1}&pageSize={size}" : null;
+        var prev = pageList.HasPrevious ? linkGenerator.GetUriByRouteValues(HttpContext, "GetUsers", new {pageNumber = page - 1, pageSize = size}) : null;
+        var next = pageList.HasNext ? linkGenerator.GetUriByRouteValues(HttpContext, "GetUsers", new {pageNumber = page + 1, pageSize = size}) : null;
         
         var paginationHeader = new
         {
@@ -152,14 +151,7 @@ public class UsersController : Controller
         };
         Response.Headers["X-Pagination"] = JsonConvert.SerializeObject(paginationHeader);
 
-        var users = pageList.Select(u => new UserDto
-        {
-            Login = u.Login,
-            Id = u.Id,
-            FullName = $"{u.FirstName} {u.LastName}",
-            GamesPlayed = u.GamesPlayed,
-            CurrentGameId = u.CurrentGameId,
-        });
+        var users = mapper.Map<IEnumerable<UserDto>>(pageList);
         
         return Ok(users);
     }
