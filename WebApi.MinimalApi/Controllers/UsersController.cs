@@ -9,6 +9,7 @@ namespace WebApi.MinimalApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Produces("application/json", "application/xml")]
 public class UsersController : ControllerBase
 {
     private readonly IUserRepository _userRepository;
@@ -22,9 +23,8 @@ public class UsersController : ControllerBase
         _linkGenerator = linkGenerator;
     }
 
-    [HttpGet("{userId}")]
-    [HttpHead("{userId}")]
-    [Produces("application/json", "application/xml")]
+    [HttpGet("{userId:guid}")]
+    [HttpHead("{userId:guid}")]
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
         var userEntity = _userRepository.FindById(userId);
@@ -44,13 +44,10 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost]
-    [Produces("application/json", "application/xml")]
-    public IActionResult CreateUser([FromBody] UserCreateDto userCreateDto)
+    public IActionResult CreateUser([FromBody] UserCreateDto? userCreateDto)
     {
         if (userCreateDto == null)
-        {
             return BadRequest();
-        }
 
         if (string.IsNullOrEmpty(userCreateDto.Login) || !userCreateDto.Login.All(char.IsLetterOrDigit))
         {
@@ -68,24 +65,18 @@ public class UsersController : ControllerBase
     }
 
     [HttpPut("{userId}")]
-    [Produces("application/json", "application/xml")]
-    public IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] UserUpdateDto userUpdateDto)
+    public IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] UserUpdateDto? userUpdateDto)
     {
         if (userUpdateDto == null || userId == Guid.Empty)
-        {
             return BadRequest();
-        }
 
         if (!ModelState.IsValid)
-        {
             return UnprocessableEntity(ModelState);
-        }
 
-        var existingUser = _userRepository.FindById(userId);
-        var updatedUser = _mapper.Map(userUpdateDto, existingUser ?? new UserEntity(userId));
+        var updatedUser = _mapper.Map(userUpdateDto, new UserEntity(userId));
 
-        _userRepository.UpdateOrInsert(updatedUser, out bool isNewUser);
-
+        _userRepository.UpdateOrInsert(updatedUser, out var isNewUser);
+    
         if (isNewUser)
         {
             return CreatedAtAction(
@@ -97,9 +88,8 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
-    [HttpPatch("{userId}")]
-    [Produces("application/json", "application/xml")]
-    public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UserUpdateDto> patchDocument)
+    [HttpPatch("{userId:guid}")]
+    public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UserUpdateDto>? patchDocument)
     {
         if (patchDocument == null)
         {
@@ -126,7 +116,7 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
-    [HttpDelete("{userId}")]
+    [HttpDelete("{userId:guid}")]
     public IActionResult RemoveUser([FromRoute] Guid userId)
     {
         var userEntity = _userRepository.FindById(userId);
@@ -140,7 +130,6 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    [Produces("application/json", "application/xml")]
     public ActionResult<IEnumerable<UserDto>> GetUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
         pageNumber = Math.Max(1, pageNumber);
