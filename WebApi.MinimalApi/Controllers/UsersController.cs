@@ -18,7 +18,7 @@ public class UsersController : Controller
         _mapper = mapper;
     }
 
-    [HttpGet("{userId}")]
+    [HttpGet("{userId}", Name = nameof(GetUserById))]
     [Produces("application/json", "application/xml")]
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
@@ -33,8 +33,55 @@ public class UsersController : Controller
     }
 
     [HttpPost]
-    public IActionResult CreateUser([FromBody] object user)
+    [Produces("application/json", "application/xml")]
+    public IActionResult CreateUser([FromBody] UserForCreateDto? user)
     {
-        throw new NotImplementedException();
+        if (user == null)
+        {
+            return BadRequest();
+        }
+        
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+
+        if (!user.Login.All(char.IsLetterOrDigit))
+        {
+            ModelState.AddModelError("Login", "Login should contain only letters or digits");
+            return UnprocessableEntity(ModelState);
+        }
+        
+        var userEntity = _mapper.Map<UserEntity>(user);
+        var createdUserEntity = _userRepository.Insert(userEntity);
+        return CreatedAtRoute(
+            nameof(GetUserById),
+            new { userId = createdUserEntity.Id },
+            createdUserEntity.Id);
+    }
+
+    [HttpPut("{userId}")]
+    [Produces("application/json", "application/xml")]
+    public IActionResult PutUser([FromRoute] Guid userId, [FromBody] UserForPutDto? user)
+    {
+        if (user == null || userId == Guid.Empty)
+        {
+            return BadRequest();
+        }
+        
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+
+        var userEntity = new UserEntity(userId);
+        _mapper.Map(user, userEntity);
+        _userRepository.UpdateOrInsert(userEntity, out var isInserted);
+
+        if (isInserted)
+        {
+            return CreatedAtRoute(
+                nameof(GetUserById),
+                new { userId = userEntity.Id },
+                userEntity.Id);
+        }
+        
+        return NoContent();
     }
 }
