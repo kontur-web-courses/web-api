@@ -16,10 +16,11 @@ public class UsersController : Controller
     private readonly IMapper mapper;
     private readonly LinkGenerator linkGenerator;
 
-    public UsersController(IUserRepository userRepository, IMapper mapper)
+    public UsersController(IUserRepository userRepository, IMapper mapper, LinkGenerator linkGenerator)
     {
         this.userRepository = userRepository;
         this.mapper = mapper;
+        this.linkGenerator = linkGenerator;
     }
 
     [HttpGet("{userId:guid}", Name = nameof(GetUserById))]
@@ -111,22 +112,31 @@ public class UsersController : Controller
         }
     }
 
-    [HttpGet]
-    public IActionResult GetAllUsers([Range(1, int.MaxValue)][FromQuery] int pageNumber = 1, [Range(1, 20)][FromQuery] int pageSize = 10)
+    [HttpGet(Name = "GetUsers")]
+    [Produces("application/json", "application/xml")]
+    public IActionResult GetAllUsers([Range(0, int.MaxValue)][FromQuery] int pageNumber = 1, [Range(1, 20)][FromQuery] int pageSize = 10)
     {
         if (!ModelState.IsValid)
-            return UnprocessableEntity(ModelState);
+        {
 
+        }
+        if (pageNumber <= 0)
+            pageNumber = 1;
+        if (pageSize <= 0)
+            pageSize = 1;
+        if (pageSize > 20)
+            pageSize = 20;
+        
         var usersPage = userRepository.GetPage(pageNumber, pageSize);
         var users = mapper.Map<IEnumerable<UserDto>>(usersPage);
         
         var paginationHeader = new
         {
             previousPageLink = usersPage.HasPrevious ? linkGenerator
-                .GetUriByRouteValues(HttpContext, "api/users/", 
+                .GetUriByRouteValues(HttpContext, "GetUsers", 
                     new { pageNumber = pageNumber - 1, pageSize = pageSize }) : null, 
             nextPageLink = usersPage.HasNext ? linkGenerator
-                .GetUriByRouteValues(HttpContext, "api/users/",
+                .GetUriByRouteValues(HttpContext, "GetUsers",
                     new { pageNumber = pageNumber + 1, pageSize = pageSize }) : null,
             totalCount = usersPage.TotalCount,
             pageSize = usersPage.PageSize,
