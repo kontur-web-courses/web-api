@@ -112,7 +112,7 @@ public class UsersController : Controller
         }
     }
 
-    [HttpGet(Name = "GetUsers")]
+    [HttpGet(Name = nameof(GetAllUsers))]
     [Produces("application/json", "application/xml")]
     public IActionResult GetAllUsers([Range(0, int.MaxValue)][FromQuery] int pageNumber = 1, [Range(1, 20)][FromQuery] int pageSize = 10)
     {
@@ -133,10 +133,10 @@ public class UsersController : Controller
         var paginationHeader = new
         {
             previousPageLink = usersPage.HasPrevious ? linkGenerator
-                .GetUriByRouteValues(HttpContext, "GetUsers", 
+                .GetUriByRouteValues(HttpContext, "GetAllUsers", 
                     new { pageNumber = pageNumber - 1, pageSize = pageSize }) : null, 
             nextPageLink = usersPage.HasNext ? linkGenerator
-                .GetUriByRouteValues(HttpContext, "GetUsers",
+                .GetUriByRouteValues(HttpContext, "GetAllUsers",
                     new { pageNumber = pageNumber + 1, pageSize = pageSize }) : null,
             totalCount = usersPage.TotalCount,
             pageSize = usersPage.PageSize,
