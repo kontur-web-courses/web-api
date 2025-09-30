@@ -1,5 +1,7 @@
-﻿using AutoMapper;
+﻿using System.ComponentModel.DataAnnotations;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
 
@@ -12,6 +14,7 @@ public class UsersController : Controller
 {
     private readonly IUserRepository userRepository;
     private readonly IMapper mapper;
+    private readonly LinkGenerator linkGenerator;
 
     public UsersController(IUserRepository userRepository, IMapper mapper)
     {
@@ -106,5 +109,32 @@ public class UsersController : Controller
         {
             ModelState.AddModelError("Login", "Login can contain only letters and digits");
         }
+    }
+
+    [HttpGet]
+    public IActionResult GetAllUsers([Range(1, int.MaxValue)][FromQuery] int pageNumber = 1, [Range(1, 20)][FromQuery] int pageSize = 10)
+    {
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+
+        var usersPage = userRepository.GetPage(pageNumber, pageSize);
+        var users = mapper.Map<IEnumerable<UserDto>>(usersPage);
+        
+        var paginationHeader = new
+        {
+            previousPageLink = usersPage.HasPrevious ? linkGenerator
+                .GetUriByRouteValues(HttpContext, "api/users/", 
+                    new { pageNumber = pageNumber - 1, pageSize = pageSize }) : null, 
+            nextPageLink = usersPage.HasNext ? linkGenerator
+                .GetUriByRouteValues(HttpContext, "api/users/",
+                    new { pageNumber = pageNumber + 1, pageSize = pageSize }) : null,
+            totalCount = usersPage.TotalCount,
+            pageSize = usersPage.PageSize,
+            currentPage = usersPage.CurrentPage,
+            totalPages = usersPage.TotalPages,
+        };
+        Response.Headers.Append("X-Pagination", JsonConvert.SerializeObject(paginationHeader));
+
+        return Ok(users);
     }
 }
