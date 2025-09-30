@@ -41,6 +41,11 @@ builder.Services.AddAutoMapper(cfg =>
         .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
         .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName))
         .ForMember(dest => dest.GamesPlayed, opt => opt.MapFrom(src => 0));
+
+    cfg.CreateMap<UserEntity, UserToUpdateDto>()
+        .ForMember(dest => dest.Login, opt => opt.MapFrom(src => src.Login))
+        .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
+        .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));
 }, new System.Reflection.Assembly[0]);
 
 builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
