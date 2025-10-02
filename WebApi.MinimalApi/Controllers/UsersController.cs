@@ -8,6 +8,7 @@ namespace WebApi.MinimalApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Produces("application/json", "application/xml")]
 public class UsersController : Controller
 {
     private readonly IUserRepository _userRepository;
@@ -19,22 +20,23 @@ public class UsersController : Controller
         _mapper = mapper;
     }
 
+    [HttpHead("{userId}")]
     [HttpGet("{userId}", Name = nameof(GetUserById))]
-    [Produces("application/json", "application/xml")]
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
         var user = _userRepository.FindById(userId);
         if (user != null)
         {
             var userDto = _mapper.Map<UserDto>(user);
-            return Ok(userDto);
+            return HttpMethods.IsHead(Request.Method)
+                ? new ContentResult { StatusCode = 200, ContentType = "application/json; charset=utf-8"}
+                : Ok(userDto);
         }
         
         return NotFound();
     }
 
     [HttpPost]
-    [Produces("application/json", "application/xml")]
     public IActionResult CreateUser([FromBody] UserForCreateDto? user)
     {
         if (user == null)
@@ -60,7 +62,6 @@ public class UsersController : Controller
     }
 
     [HttpPut("{userId}")]
-    [Produces("application/json", "application/xml")]
     public IActionResult PutUser([FromRoute] Guid userId, [FromBody] UserForPutDto? user)
     {
         if (user == null || userId == Guid.Empty)
@@ -87,7 +88,6 @@ public class UsersController : Controller
     }
 
     [HttpPatch("{userId}")]
-    [Produces("application/json", "application/xml")]
     public IActionResult PartiallyUpdateUser(
         [FromRoute] Guid userId,
         [FromBody] JsonPatchDocument<UserToUpdateDto>? patchDoc)
@@ -115,6 +115,19 @@ public class UsersController : Controller
         var userEntity = new UserEntity(userId);
         _mapper.Map(user, userEntity);
         _userRepository.Update(userEntity);
+
+        return NoContent();
+    }
+
+    [HttpDelete("{userId}")]
+    public IActionResult DeleteUser([FromRoute] Guid userId)
+    {
+        if (userId == Guid.Empty || _userRepository.FindById(userId) == null)
+        {
+            return NotFound();
+        }
+
+        _userRepository.Delete(userId);
 
         return NoContent();
     }
