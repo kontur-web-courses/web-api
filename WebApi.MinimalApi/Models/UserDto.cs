@@ -15,8 +15,6 @@ public class UserDto
 public class CreateUserDto
 {
     [Required]
-    [RegularExpression("^[0-9\\p{L}]*$",
-        ErrorMessage = "Login should contain only letters or digits")]
     public string Login { get; set; }
 
     [DefaultValue("Biba")]
@@ -32,6 +30,9 @@ public class UpdateUserDto
     [RegularExpression("^[0-9\\p{L}]*$",
         ErrorMessage = "Login should contain only letters or digits")]
     public string Login { get; set; }
+    [Required(ErrorMessage = "First name cannot be empty.")]
     public string FirstName { get; set; }
+
+    [Required(AllowEmptyStrings = false, ErrorMessage = "Last name cannot be empty")]
     public string LastName { get; set; }
 }

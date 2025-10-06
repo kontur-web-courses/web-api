@@ -48,13 +48,13 @@ public class UsersController : Controller
     {
         if (user is null) return BadRequest();
 
-        if (string.IsNullOrEmpty(user.Login))
+        if (!ModelState.IsValid) return UnprocessableEntity(ModelState);
+
+        if (!user.Login.All(char.IsLetterOrDigit))
         {
-            ModelState.AddModelError("login", "Error");
+            ModelState.AddModelError("Login", "Login must contain only letters and digits");
             return UnprocessableEntity(ModelState);
         }
-
-        if (!ModelState.IsValid) return UnprocessableEntity(ModelState);
 
         var entityToCreate = mapper.Map<UserEntity>(user);
         var created = userRepository.Insert(entityToCreate);
@@ -71,10 +71,10 @@ public class UsersController : Controller
     {
         if (user is null) return BadRequest();
 
-        var validation = ValidateUserDto(user);
-        if (validation is not null) return validation;
-
         if (!Guid.TryParse(userId, out var id)) return BadRequest();
+
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
 
         var entity = userRepository.FindById(id);
         if (entity is null)
@@ -98,9 +98,6 @@ public class UsersController : Controller
         if (entity is null) return NotFound();
 
         var dtoToPatch = mapper.Map<UpdateUserDto>(entity);
-
-        var preValidation = ValidatePatchDocument(patchDoc);
-        if (preValidation is not null) return preValidation;
 
         patchDoc.ApplyTo(dtoToPatch, ModelState);
         TryValidateModel(dtoToPatch);
@@ -160,65 +157,6 @@ public class UsersController : Controller
         Response.Headers.Add("Allow", "GET, POST, OPTIONS");
 
         return Ok();
-    }
-
-    private IActionResult? ValidateUserDto(UpdateUserDto userDto)
-    {
-        if (!ModelState.IsValid) return UnprocessableEntity(ModelState);
-
-        if (string.IsNullOrWhiteSpace(userDto.FirstName))
-        {
-            ModelState.AddModelError("firstName", "First name cannot be empty.");
-            return UnprocessableEntity(ModelState);
-        }
-
-        if (string.IsNullOrWhiteSpace(userDto.LastName))
-        {
-            ModelState.AddModelError("lastName", "Last name cannot be empty.");
-            return UnprocessableEntity(ModelState);
-        }
-
-        return null;
-    }
-
-    private IActionResult? ValidatePatchDocument(JsonPatchDocument<UpdateUserDto> patchDoc)
-    {
-        foreach (var op in patchDoc.Operations)
-        {
-            var path = op.path?.Trim('/');
-            if (string.Equals(path, "login", StringComparison.OrdinalIgnoreCase))
-            {
-                var value = op.value?.ToString() ?? string.Empty;
-                if (string.IsNullOrWhiteSpace(value))
-                {
-                    ModelState.AddModelError("login", "Login cannot be empty.");
-                    return UnprocessableEntity(ModelState);
-                }
-                if (!IsAlphaNum(value))
-                {
-                    ModelState.AddModelError("login", "Login must not contain special characters.");
-                    return UnprocessableEntity(ModelState);
-                }
-            }
-            else if (string.Equals(path, "firstName", StringComparison.OrdinalIgnoreCase))
-            {
-                if (string.IsNullOrWhiteSpace(op.value?.ToString()))
-                {
-                    ModelState.AddModelError("firstName", "First name cannot be empty.");
-                    return UnprocessableEntity(ModelState);
-                }
-            }
-            else if (string.Equals(path, "lastName", StringComparison.OrdinalIgnoreCase))
-            {
-                if (string.IsNullOrWhiteSpace(op.value?.ToString()))
-                {
-                    ModelState.AddModelError("lastName", "Last name cannot be empty.");
-                    return UnprocessableEntity(ModelState);
-                }
-            }
-        }
-
-        return null;
     }
 
     private static bool IsAlphaNum(string s)
