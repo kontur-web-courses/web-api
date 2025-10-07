@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -46,12 +47,26 @@ builder.Services.AddAutoMapper(cfg =>
         .ForMember(dest => dest.Login, opt => opt.MapFrom(src => src.Login))
         .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
         .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));
-}, new System.Reflection.Assembly[0]);
+}, Array.Empty<Assembly>());
 
 builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.EnableAnnotations(); 
+    
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename)); 
+});
+
+builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
 
 app.MapControllers();
+
+app.UseSwagger();
+
+app.UseSwaggerUI();
 
 app.Run();
