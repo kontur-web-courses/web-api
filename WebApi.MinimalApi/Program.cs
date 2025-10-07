@@ -1,13 +1,45 @@
+using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using WebApi.MinimalApi.Domain;
+using WebApi.MinimalApi.Models;
+using WebApi.MinimalApi.Samples;
+
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://localhost:5000");
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+{
+    options.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
+    options.ReturnHttpNotAcceptable = true;
+    options.RespectBrowserAcceptHeader = true;
+})
     .ConfigureApiBehaviorOptions(options => {
         options.SuppressModelStateInvalidFilter = true;
         options.SuppressMapClientErrors = true;
-    });
+    })
+    .AddNewtonsoftJson(options =>
+    {
+        options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+        options.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Populate;
+    });;
+builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
+builder.Services.AddAutoMapper(cfg =>
+{
+    cfg.CreateMap<UserEntity, UserDto>();
+    cfg.CreateMap<UserCreateDto, UserEntity>();
+    cfg.CreateMap<UserUpdateDto, UserEntity>();
+}, new System.Reflection.Assembly[0]);
 var app = builder.Build();
 
-app.MapControllers();
+app.UseSwagger();
+app.UseSwaggerUI(options => // UseSwaggerUI is called only in Development.
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+    options.RoutePrefix = string.Empty;
+});
 
 app.Run();
