@@ -1,9 +1,9 @@
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Serialization;
+using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
 
@@ -14,14 +14,18 @@ namespace WebApi.MinimalApi.Controllers;
 public partial class UsersController : Controller
 {
     private readonly IUserRepository userRepository;
+    private readonly IMapper mapper;
+    private readonly LinkGenerator linkGenerator;
     private static readonly Regex AllowedLoginRegex = MyRegex();
     
-    public UsersController(IUserRepository userRepository)
+    public UsersController(IUserRepository userRepository, IMapper mapper, LinkGenerator linkGenerator)
     {
         this.userRepository = userRepository;
+        this.mapper = mapper;
+        this.linkGenerator = linkGenerator;
     }
 
-    [HttpGet("{userId}")]
+    [HttpGet("{userId}", Name = nameof(GetUserById))]
     [Produces("application/json", "application/xml")]
     public IActionResult GetUserById([FromRoute] Guid userId, [FromHeader(Name = "Accept")] string acceptHeader)
     {
@@ -31,7 +35,7 @@ public partial class UsersController : Controller
             return NotFound();
         }
 
-        var userDto = user.ToDto();
+        var userDto = mapper.Map<UserDto>(user);
 
         if (acceptHeader.Contains("application/json"))
         {
@@ -53,7 +57,7 @@ public partial class UsersController : Controller
     }
 
     [HttpPost] 
-    [Produces("application/json")]
+    [Produces("application/json", "application/xml")]
     public IActionResult CreateUser([FromBody] UserCreateDto? userCreateDto)
     {
         var acceptHeader = Request.Headers.Accept.FirstOrDefault() ?? string.Empty;
@@ -63,10 +67,13 @@ public partial class UsersController : Controller
         if (userCreateDto == null)
             return StatusCode(StatusCodes.Status400BadRequest);
 
-        if (string.IsNullOrWhiteSpace(userCreateDto.Login) || !AllowedLoginRegex.IsMatch(userCreateDto.Login))
+        if (string.IsNullOrWhiteSpace(userCreateDto.Login) || !userCreateDto.Login.All(char.IsLetterOrDigit))
+        {
+            ModelState.AddModelError(nameof(userCreateDto.Login), "Логин не прошел валидацию");
             return UnprocessableEntity(new { login  = "Login is required"});
+        }
 
-        var newUser = new UserEntity(Guid.Empty)
+        var newUser = new UserEntity
         {
             Login = userCreateDto.Login,
             FirstName = userCreateDto.FirstName,
@@ -75,28 +82,15 @@ public partial class UsersController : Controller
             CurrentGameId = null
         };
         var inserted = userRepository.Insert(newUser);
-        Response.Headers.Location = $"{Request.Path.Value?.TrimEnd('/')}/{inserted.Id}";
 
-        if (acceptHeader.Contains("application/xml"))
-        {
-            return new ContentResult
-            {
-                Content = $"<guid>{inserted.Id}</guid>",
-                ContentType = "application/xml; charset=utf-8",
-                StatusCode = StatusCodes.Status201Created
-            };
-        }
-
-        return new ContentResult
-        {
-            Content = JsonConvert.SerializeObject(inserted.Id),
-            ContentType = "application/json; charset=utf-8",
-            StatusCode = StatusCodes.Status201Created
-        };
+        return CreatedAtRoute(
+            nameof(GetUserById), 
+            new { userId = inserted.Id },
+            inserted.Id);
     }
 
     [HttpPut("{userId}")]
-    public IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] UpdateUserDto? updateUserDto)
+    public IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] UpdateUserRequest? updateUserDto)
     {
         if (updateUserDto == null || userId == Guid.Empty)
             return BadRequest();
@@ -134,37 +128,29 @@ public partial class UsersController : Controller
     }
 
     [HttpPatch("{userId}")]
-    public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] List<PatchOperation>? operations)
+    [Produces("application/json", "application/xml")]
+    public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UpdateUserRequest>? patchDoc)
     {
-        if (operations == null || operations.Count == 0) return BadRequest();
+        if (patchDoc == null)
+            return BadRequest();
+
         var user = userRepository.FindById(userId);
-        if (user == null) return NotFound();
-        foreach (var operation in operations.Where(operation => operation.op == "replace"))
-        {
-            switch (operation.path)
-            {
-                case "login":
-                    if (string.IsNullOrWhiteSpace(operation.value) || !AllowedLoginRegex.IsMatch(operation.value))
-                        return UnprocessableEntity(new { login = "Invalid login" });
+        if (user == null)
+            return NotFound();
 
-                    user.Login = operation.value;
-                    break;
-                case "firstName":
-                    if (string.IsNullOrWhiteSpace(operation.value))
-                        return UnprocessableEntity(new { firstName = "First name is required" });
+        var updateRequest = mapper.Map<UpdateUserRequest>(user);
+        
+        patchDoc.ApplyTo(updateRequest, ModelState);
+        
+        if (!TryValidateModel(updateRequest))
+            return UnprocessableEntity(ModelState);
 
-                    user.FirstName = operation.value;
-                    break;
-                case "lastName":
-                    if (string.IsNullOrWhiteSpace(operation.value))
-                        return UnprocessableEntity(new { lastName = "Last name is required" });
+        if (!ModelState.IsValid)
+            return ValidationProblem(ModelState);
 
-                    user.LastName = operation.value;
-                    break;
-            }
-        }
-
+        mapper.Map(updateRequest, user);
         userRepository.Update(user);
+
         return NoContent();
     }
 
@@ -191,7 +177,8 @@ public partial class UsersController : Controller
         return Ok();
     }
 
-    [HttpGet]
+    [HttpGet(Name = nameof(GetUsersWithPagination))]
+    [Produces("application/json", "application/xml")]
     public IActionResult GetUsersWithPagination([FromQuery] int pageSize = 10, [FromQuery] int pageNumber = 1)
     {
         if (pageNumber <= 0) pageNumber = 1;
@@ -199,11 +186,15 @@ public partial class UsersController : Controller
         if (pageSize > PageList<UserEntity>.MaxPageSize) pageSize = PageList<UserEntity>.MaxPageSize;
         
         var resultPage = userRepository.GetPage(pageNumber, pageSize);
-        var users = resultPage.Select(user => user.ToDto());
+        var users = mapper.Map<IEnumerable<UserDto>>(resultPage);
         var pagination = new Pagination
         {
-            PreviousPageLink = resultPage.HasPrevious ? $"api/users/{resultPage.CurrentPage - 1}" : null ,
-            NextPageLink = resultPage.HasNext ? $"api/users/{resultPage.CurrentPage + 1}" : null,
+            PreviousPageLink = resultPage.HasPrevious
+                ? linkGenerator.GetUriByRouteValues(HttpContext, nameof(GetUsersWithPagination), new { pageNumber = resultPage.CurrentPage - 1, pageSize }) 
+                : null,
+            NextPageLink = resultPage.HasNext
+                ? linkGenerator.GetUriByRouteValues(HttpContext, nameof(GetUsersWithPagination), new { pageNumber = resultPage.CurrentPage + 1, pageSize })
+                : null,
             TotalCount = (int)resultPage.TotalCount,
             CurrentPage = resultPage.CurrentPage,
             PageSize = resultPage.PageSize,
