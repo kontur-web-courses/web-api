@@ -44,10 +44,9 @@ public partial class UsersController : Controller
 
         if (!acceptHeader.Contains("application/xml"))
             return StatusCode(406);
-
-        var xmlSerializer = new XmlSerializer(typeof(UserDto));
+        
         using var stringWriter = new StringWriter();
-        xmlSerializer.Serialize(stringWriter, userDto);
+        new XmlSerializer(typeof(UserDto)).Serialize(stringWriter, userDto);
         var xml = stringWriter.ToString();
         return Content(xml, "application/xml; charset=utf-8");
 
@@ -103,24 +102,16 @@ public partial class UsersController : Controller
             return BadRequest();
 
         if (string.IsNullOrWhiteSpace(updateUserDto.login))
-        {
             return UnprocessableEntity(new { login = "Login is required" });
-        }
 
         if (!AllowedLoginRegex.IsMatch(updateUserDto.login))
-        {
             return UnprocessableEntity(new { login = "Invalid login" });
-        }
 
         if (string.IsNullOrWhiteSpace(updateUserDto.firstName))
-        {
             return UnprocessableEntity(new { firstName = "First name is required" });
-        }
 
         if (string.IsNullOrWhiteSpace(updateUserDto.lastName))
-        {
             return UnprocessableEntity(new { lastName = "Last name is required" });
-        }
 
         var user = new UserEntity(userId)
         {
@@ -132,7 +123,7 @@ public partial class UsersController : Controller
 
         if (!isInserted)
             return NoContent();
-        Response.Headers.Location = $"{Request.Path.Value?.TrimEnd('/')}";
+        Response.Headers.Location = Request.Path.Value;
 
         return new ContentResult
         {
@@ -143,11 +134,10 @@ public partial class UsersController : Controller
     }
 
     [HttpPatch("{userId}")]
-    public IActionResult PartiallyUpdateUser([FromRoute] string userId, [FromBody] List<PatchOperation>? operations)
+    public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] List<PatchOperation>? operations)
     {
         if (operations == null || operations.Count == 0) return BadRequest();
-        if (!Guid.TryParse(userId, out var guid)) return NotFound();
-        var user = userRepository.FindById(guid);
+        var user = userRepository.FindById(userId);
         if (user == null) return NotFound();
         foreach (var operation in operations.Where(operation => operation.op == "replace"))
         {
@@ -155,25 +145,19 @@ public partial class UsersController : Controller
             {
                 case "login":
                     if (string.IsNullOrWhiteSpace(operation.value) || !AllowedLoginRegex.IsMatch(operation.value))
-                    {
                         return UnprocessableEntity(new { login = "Invalid login" });
-                    }
 
                     user.Login = operation.value;
                     break;
                 case "firstName":
                     if (string.IsNullOrWhiteSpace(operation.value))
-                    {
                         return UnprocessableEntity(new { firstName = "First name is required" });
-                    }
 
                     user.FirstName = operation.value;
                     break;
                 case "lastName":
                     if (string.IsNullOrWhiteSpace(operation.value))
-                    {
                         return UnprocessableEntity(new { lastName = "Last name is required" });
-                    }
 
                     user.LastName = operation.value;
                     break;
