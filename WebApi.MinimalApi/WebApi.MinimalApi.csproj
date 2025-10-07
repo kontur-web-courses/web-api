@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <LangVersion>11</LangVersion>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
     
     <ItemGroup>
@@ -16,7 +17,6 @@
       <None Include="Samples\UsersApi.postman_collection.json" />
       <None Include="Samples\ValuesApi.postman_collection.json" />
     </ItemGroup>
-
     <ItemGroup>
       <PackageReference Include="AutoMapper" Version="13.0.1" />
       <PackageReference Include="Microsoft.AspNetCore.JsonPatch" Version="8.0.2" />

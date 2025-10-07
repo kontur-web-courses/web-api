@@ -35,6 +35,7 @@ public static class SwaggerExtensions
         {
             c.SwaggerEndpoint("/swagger/web-api/swagger.json", "Web API");
             c.RoutePrefix = string.Empty;
+            c.RoutePrefix = string.Empty;
         });
     }
 
