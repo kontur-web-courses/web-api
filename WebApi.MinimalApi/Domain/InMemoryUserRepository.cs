@@ -88,6 +88,11 @@ public class InMemoryUserRepository : IUserRepository
         return new PageList<UserEntity>(items, count, pageNumber, pageSize);
     }
 
+    public int GetTotalCount()
+    {
+        return entities.Count;
+    }
+
     private UserEntity Clone(Guid id, UserEntity user)
     {
         return new UserEntity(id, user.Login, user.LastName, user.FirstName, user.GamesPlayed, user.CurrentGameId);
