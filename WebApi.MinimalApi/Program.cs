@@ -27,6 +27,9 @@ builder.Services.AddMvc(options =>
     options.ReturnHttpNotAcceptable = true;
 });
 
+builder.Services.AddSwaggerGen()
+    .AddSwaggerGenNewtonsoftSupport();
+
 builder.Services.AddAutoMapper(cfg =>
 {
     cfg.CreateMap<UserEntity, UserDto>()
@@ -37,6 +40,12 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.CreateMap<UserEntity, UpdateUserRequest>();
 }, Array.Empty<Assembly>());
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.MapControllers();
 
