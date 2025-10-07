@@ -2,6 +2,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Swashbuckle.AspNetCore.Annotations;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
 
@@ -30,6 +31,8 @@ public class UsersController : Controller
     [HttpGet("{userId}", Name = nameof(GetUserById))]
     [HttpHead("{userId}")]
     [Produces("application/json", "application/xml")]
+    [SwaggerResponse(200, "OK", typeof(UserDto))]
+    [SwaggerResponse(404, "Пользователь не найден")]
     public IActionResult GetUserById([FromRoute] Guid userId)
     {
         var user = _userRepository.FindById(userId);
@@ -62,7 +65,11 @@ public class UsersController : Controller
     /// </remarks>
     /// <param name="user">Данные для создания пользователя</param>
     [HttpPost]
+    [Consumes("application/json")]
     [Produces("application/json", "application/xml")]
+    [SwaggerResponse(201, "Пользователь создан")]
+    [SwaggerResponse(400, "Некорректные входные данные")]
+    [SwaggerResponse(422, "Ошибка при проверке")]
     public IActionResult CreateUser([FromBody] UserCreateDto user)
     {
         if (user is null)
@@ -95,7 +102,12 @@ public class UsersController : Controller
     /// <param name="userId">Идентификатор пользователя</param>
     /// <param name="user">Обновленные данные пользователя</param>
     [HttpPut("{userId}")]
+    [Consumes("application/json")]
     [Produces("application/json", "application/xml")]
+    [SwaggerResponse(201, "Пользователь создан")]
+    [SwaggerResponse(204, "Пользователь обновлен")]
+    [SwaggerResponse(400, "Некорректные входные данные")]
+    [SwaggerResponse(422, "Ошибка при проверке")]
     public IActionResult UpdateUser([FromBody] UserUpdateDto userInfo, [FromRoute] Guid userId)
     {
         if (userInfo is null)
@@ -142,7 +154,12 @@ public class UsersController : Controller
     /// <param name="userId">Идентификатор пользователя</param>
     /// <param name="patchDoc">JSON Patch для пользователя</param>
     [HttpPatch("{userId}")]
+    [Consumes("application/json-patch+json")]
     [Produces("application/json", "application/xml")]
+    [SwaggerResponse(204, "Пользователь обновлен")]
+    [SwaggerResponse(400, "Некорректные входные данные")]
+    [SwaggerResponse(404, "Пользователь не найден")]
+    [SwaggerResponse(422, "Ошибка при проверке")]
     public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UserUpdateDto> patchDoc)
     {
         if (patchDoc is null)
@@ -180,6 +197,8 @@ public class UsersController : Controller
     /// <param name="userId">Идентификатор пользователя</param>
     [HttpDelete("{userId}")]
     [Produces("application/json", "application/xml")]
+    [SwaggerResponse(204, "Пользователь удален")]
+    [SwaggerResponse(404, "Пользователь не найден")]
     public IActionResult DeleteUser([FromRoute] Guid userId)
     {
         if (_userRepository.FindById(userId) is null)
@@ -200,6 +219,7 @@ public class UsersController : Controller
     /// <response code="200">OK</response>
     [HttpGet(Name = "GetUsers")]
     [Produces("application/json", "application/xml")]
+    [ProducesResponseType(typeof(IEnumerable<UserDto>), 200)]
     public IActionResult GetUsers([FromQuery] string? pageNumber, [FromQuery] string? pageSize)
     {
         var pageSizeInt = 10;

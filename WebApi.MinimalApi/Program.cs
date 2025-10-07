@@ -24,7 +24,8 @@ builder.Services.AddControllers(options =>
         options.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Populate;
     });;
 builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
-builder.Services.AddSwaggerGeneration();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 builder.Services.AddAutoMapper(cfg =>
 {
@@ -34,6 +35,11 @@ builder.Services.AddAutoMapper(cfg =>
 }, new System.Reflection.Assembly[0]);
 var app = builder.Build();
 
-app.UseSwaggerWithUI();
+app.UseSwagger();
+app.UseSwaggerUI(options => // UseSwaggerUI is called only in Development.
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+    options.RoutePrefix = string.Empty;
+});
 
 app.Run();
