@@ -1,4 +1,6 @@
+using System.Reflection;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using WebApi.MinimalApi.Domain;
@@ -6,6 +8,26 @@ using WebApi.MinimalApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://localhost:5000");
+
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    // Создаем документ с описанием API
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Web API",
+        Version = "0.1",
+    });
+
+    // Конфигурируем Swashbuckle, чтобы использовались Xml Documentation Comments
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    c.IncludeXmlComments(xmlPath);
+
+    // Конфигурируем Swashbuckle, чтобы работали атрибуты
+    c.EnableAnnotations();
+});
+
 builder.Services.AddControllers(options =>
     {
         // Этот OutputFormatter позволяет возвращать данные в XML, если требуется.
@@ -39,6 +61,13 @@ builder.Services.AddAutoMapper(cfg =>
 }, new System.Reflection.Assembly[0]);
 
 var app = builder.Build();
+
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Web API");
+    c.RoutePrefix = string.Empty;
+});
 
 app.MapControllers();
 
