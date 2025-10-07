@@ -76,7 +76,7 @@ namespace Tests
             response.ShouldHaveHeader("Content-Type", "application/json; charset=utf-8");
             var responseContent = response.ReadContentAsJson() as JObject;
             responseContent.Should().NotBeNull();
-            responseContent.GetValue("login").Should().NotBeNullOrEmpty();
+            responseContent.GetValue("login").ToString().Should().NotBeNullOrEmpty();
         }
 
         [Test]
@@ -98,7 +98,7 @@ namespace Tests
             response.ShouldHaveHeader("Content-Type", "application/json; charset=utf-8");
             var responseContent = response.ReadContentAsJson() as JObject;
             responseContent.Should().NotBeNull();
-            responseContent.GetValue("login").Should().NotBeNullOrEmpty();
+            responseContent.GetValue("login").ToString().Should().NotBeNullOrEmpty();
         }
 
         [Test]
