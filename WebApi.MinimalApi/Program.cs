@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
+using WebApi.MinimalApi.Samples;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("http://localhost:5000");
@@ -22,6 +24,7 @@ builder.Services.AddControllers(options =>
         options.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Populate;
     });;
 builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+builder.Services.AddSwaggerGeneration();
 
 builder.Services.AddAutoMapper(cfg =>
 {
@@ -31,6 +34,6 @@ builder.Services.AddAutoMapper(cfg =>
 }, new System.Reflection.Assembly[0]);
 var app = builder.Build();
 
-app.MapControllers();
+app.UseSwaggerWithUI();
 
 app.Run();

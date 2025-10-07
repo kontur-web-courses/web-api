@@ -22,7 +22,11 @@ public class UsersController : Controller
         _mapper = mapper;
         _linkGenerator = linkGenerator;
     }
-
+    
+    /// <summary>
+    /// Получить пользователя
+    /// </summary>
+    /// <param name="userId">Идентификатор пользователя</param>
     [HttpGet("{userId}", Name = nameof(GetUserById))]
     [HttpHead("{userId}")]
     [Produces("application/json", "application/xml")]
@@ -42,6 +46,21 @@ public class UsersController : Controller
         return Ok(_mapper.Map<UserDto>(user));
     }
 
+    /// <summary>
+    /// Создать пользователя
+    /// </summary>
+    /// <remarks>
+    /// Пример запроса:
+    ///
+    ///     POST /api/users
+    ///     {
+    ///        "login": "johndoe375",
+    ///        "firstName": "John",
+    ///        "lastName": "Doe"
+    ///     }
+    ///
+    /// </remarks>
+    /// <param name="user">Данные для создания пользователя</param>
     [HttpPost]
     [Produces("application/json", "application/xml")]
     public IActionResult CreateUser([FromBody] UserCreateDto user)
@@ -69,7 +88,12 @@ public class UsersController : Controller
             new { userId = createdUserEntity.Id },
             createdUserEntity.Id);
     }
-
+    
+    /// <summary>
+    /// Обновить пользователя
+    /// </summary>
+    /// <param name="userId">Идентификатор пользователя</param>
+    /// <param name="user">Обновленные данные пользователя</param>
     [HttpPut("{userId}")]
     [Produces("application/json", "application/xml")]
     public IActionResult UpdateUser([FromBody] UserUpdateDto userInfo, [FromRoute] Guid userId)
@@ -111,7 +135,12 @@ public class UsersController : Controller
 
         return NoContent();
     }
-
+    
+    /// <summary>
+    /// Частично обновить пользователя
+    /// </summary>
+    /// <param name="userId">Идентификатор пользователя</param>
+    /// <param name="patchDoc">JSON Patch для пользователя</param>
     [HttpPatch("{userId}")]
     [Produces("application/json", "application/xml")]
     public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UserUpdateDto> patchDoc)
@@ -144,7 +173,11 @@ public class UsersController : Controller
         
         return NoContent();
     }
-
+    
+    /// <summary>
+    /// Удалить пользователя
+    /// </summary>
+    /// <param name="userId">Идентификатор пользователя</param>
     [HttpDelete("{userId}")]
     [Produces("application/json", "application/xml")]
     public IActionResult DeleteUser([FromRoute] Guid userId)
@@ -158,7 +191,13 @@ public class UsersController : Controller
         
         return NoContent();
     }
-
+    
+    /// <summary>
+    /// Получить пользователей
+    /// </summary>
+    /// <param name="pageNumber">Номер страницы, по умолчанию 1</param>
+    /// <param name="pageSize">Размер страницы, по умолчанию 20</param>
+    /// <response code="200">OK</response>
     [HttpGet(Name = "GetUsers")]
     [Produces("application/json", "application/xml")]
     public IActionResult GetUsers([FromQuery] string? pageNumber, [FromQuery] string? pageSize)
@@ -198,6 +237,9 @@ public class UsersController : Controller
         return Ok(users);
     }
     
+    /// <summary>
+    /// Опции по запросам о пользователях
+    /// </summary>
     [HttpOptions]
     [Produces("application/json", "application/xml")]
     public IActionResult Options()
