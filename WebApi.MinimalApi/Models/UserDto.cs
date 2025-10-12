@@ -1,5 +1,5 @@
 namespace WebApi.MinimalApi.Models;
-
+using WebApi.MinimalApi.Domain;
 public class UserDto
 { 
     public Guid Id { get; set; }
