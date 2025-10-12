@@ -3,11 +3,13 @@ using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace WebApi.MinimalApi.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Produces("application/json", "application/xml")]
 public class UsersController : Controller
 {
     // Чтобы ASP.NET положил что-то в userRepository требуется конфигурация
@@ -19,8 +21,7 @@ public class UsersController : Controller
         _mapper = mapper;
     }
 
-    [HttpGet("{userId}")]
-    [Produces("application/json", "application/xml")]
+    [HttpGet("{userId}", Name = nameof(GetUserById))]
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
         var user = _userRepository.FindById(userId);
@@ -31,8 +32,24 @@ public class UsersController : Controller
     }
 
     [HttpPost]
-    public IActionResult CreateUser([FromBody] object user)
+    public IActionResult CreateUser([FromBody] UserPost? user)
     {
-        throw new NotImplementedException();
+        if (user is null)
+            return BadRequest();
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+
+        if (!user.Login.All(char.IsLetterOrDigit))
+        {
+            ModelState.AddModelError(nameof(user.Login), "Сообщение об ошибке");
+            return UnprocessableEntity(ModelState);
+        }
+
+        var userEntity = _mapper.Map<UserEntity>(user);
+        _userRepository.Insert(userEntity);
+        return CreatedAtRoute(
+            nameof(GetUserById),
+            new { userId = userEntity.Id },
+        userEntity.Id);
     }
 }
