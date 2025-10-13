@@ -23,15 +23,14 @@ builder.Services.AddControllers(options =>
         options.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Populate;
     });
 
-
 builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
 builder.Services.AddAutoMapper(cfg =>
 {
     cfg.CreateMap<UserEntity, UserDto>()
         .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.LastName} {src.FirstName}"));
     cfg.CreateMap<UserPost, UserEntity>();
+    cfg.CreateMap<UserPut, UserEntity>().ReverseMap();
 }, new System.Reflection.Assembly[0]);
-
 var app = builder.Build();
 
 app.MapControllers();
