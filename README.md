@@ -49,9 +49,10 @@ return Ok(user);
 ```
 Подобные методы есть и для других status code, например, `NotFound()` для кода 404.
 
-Правда вернуть надо не объект из репозитория (фактически, базы данных),
+Правда, вернуть надо не объект из репозитория (фактически, базы данных),
 а некое ожидаемое представление ресурса — `UserDto`.
 `FullName` в этом представлении должен вычисляться как `$"{src.LastName} {src.FirstName}"`.
+Не забудь про это, ибо ASP.NET Core в `Ok` принимает `object`, поэтому тип результата не будет проверяться. Это фиксится либо своими методами в собственном базовом классе, либо методами-расширениями, либо анализаторами кода, либо "ручным" созданием результата `new OkObjectResult(dto)`.
 
 Теперь должно проходить часть тестов!
 
@@ -65,7 +66,14 @@ return Ok(user);
 builder.Services.AddControllers(options =>
 {
     // Этот OutputFormatter позволяет возвращать данные в XML, если требуется.
-    options.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter());
+    options.OutputFormatters.Add(new XmlSerializerOutputFormatter());
+    // Нужно для того, чтобы XML не стал форматом по умолчанию. Можно попробовать убрать и посмотреть, что будет
+    options.OutputFormatters.Insert(0, new 
+        NewtonsoftJsonOutputFormatter(new JsonSerializerSettings
+        {
+            ContractResolver = new 
+            CamelCasePropertyNamesContractResolver()
+        }, ArrayPool<char>.Shared, options));
     // Эта настройка позволяет отвечать кодом 406 Not Acceptable на запросы неизвестных форматов.
     options.ReturnHttpNotAcceptable = true;
     // Эта настройка приводит к игнорированию заголовка Accept, когда он содержит */*
