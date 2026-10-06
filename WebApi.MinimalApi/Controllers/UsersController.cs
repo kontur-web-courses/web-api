@@ -106,6 +106,14 @@ public class UsersController : Controller
         return NoContent();
     }
     
+    [HttpOptions("")]
+    [Produces("application/json", "application/xml")]
+    public IActionResult GetUsersOptions()
+    {
+        Response.Headers.Add("Allow", "POST, GET, OPTIONS");
+        return Ok();
+    }
+    
     [HttpGet("")]
     [Produces("application/json", "application/xml")]
     public ActionResult<UserDto> GetUser([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
