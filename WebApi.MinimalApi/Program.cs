@@ -31,6 +31,7 @@ builder.Services.AddControllers(options =>
 .AddNewtonsoftJson(options =>
     {
         options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+        options.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Populate;
     });
 
 builder.Services.AddAutoMapper(cfg =>

@@ -25,7 +25,7 @@ public class UsersController : Controller
         var user = _userRepository.FindById(userId);
         if (user == null)
         {
-            return NotFound("User not found");
+            return NotFound();
         }
 
         return _mapper.Map<UserDto>(user);
