@@ -39,7 +39,7 @@ public interface ISwaggerDescriptionsForUsersController
     [SwaggerResponse(201, "Пользователь создан")]
     [SwaggerResponse(400, "Некорректные входные данные")]
     [SwaggerResponse(422, "Ошибка при проверке")]
-    IActionResult CreateUser([FromBody] object user);
+    IActionResult CreateUser([FromBody] AddUserDto user);
 
     /// <summary>
     /// Удалить пользователя
@@ -63,7 +63,7 @@ public interface ISwaggerDescriptionsForUsersController
     [SwaggerResponse(204, "Пользователь обновлен")]
     [SwaggerResponse(400, "Некорректные входные данные")]
     [SwaggerResponse(422, "Ошибка при проверке")]
-    IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] object user);
+    IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] UpdateUserDto user);
 
     /// <summary>
     /// Частично обновить пользователя
@@ -78,7 +78,7 @@ public interface ISwaggerDescriptionsForUsersController
     [SwaggerResponse(404, "Пользователь не найден")]
     [SwaggerResponse(422, "Ошибка при проверке")]
     IActionResult PartiallyUpdateUser([FromRoute] Guid userId,
-        [FromBody] JsonPatchDocument<object> patchDoc);
+        [FromBody] JsonPatchDocument<UpdateUserDto> patchDoc);
 
     /// <summary>
     /// Получить пользователей
