@@ -56,6 +56,6 @@ public class UsersController : Controller
         return CreatedAtRoute(
             nameof(GetUserById),
             new { userId = createdUserEntity.Id },
-            createdUserDto);
+            createdUserDto.Id);
     }
 }
