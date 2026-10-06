@@ -1,111 +1,105 @@
-using FluentAssertions;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using NUnit.Framework;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Xml.Linq;
+using FluentAssertions;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using NUnit.Framework;
 
-namespace Tests
+namespace Tests;
+
+public static class Extensions
 {
-    public static class Extensions
+    public static HttpResponseMessage Send(this HttpClient httpClient, HttpRequestMessage request)
     {
-        public static HttpResponseMessage Send(this HttpClient httpClient, HttpRequestMessage request)
-        {
-            return httpClient.SendAsync(request).Result;
-        }
+        return httpClient.SendAsync(request).Result;
+    }
 
-        public static string[] GetRequiredHeader(this HttpResponseMessage response, string headerName)
-        {
-            var hasResponseHeader = response.Headers.TryGetValues(headerName, out var responseHeaderValues);
-            var hasContentHeader = response.Content.Headers.TryGetValues(headerName, out var contentHeaderValues);
+    public static string[] GetRequiredHeader(this HttpResponseMessage response, string headerName)
+    {
+        var hasResponseHeader = response.Headers.TryGetValues(headerName, out var responseHeaderValues);
+        var hasContentHeader = response.Content.Headers.TryGetValues(headerName, out var contentHeaderValues);
 
-            if (hasResponseHeader && hasContentHeader)
-                Assert.Fail($"Should have only one '{headerName}' header");
+        if (hasResponseHeader && hasContentHeader)
+            Assert.Fail($"Should have only one '{headerName}' header");
 
-            if (hasResponseHeader)
-            {
-                return responseHeaderValues.ToArray();
-            }
-            else if (hasContentHeader)
-            {
-                return contentHeaderValues.ToArray();
-            }
-            Assert.Fail($"Should have '{headerName}' header");
-            return null;
-        }
+        if (hasResponseHeader) return responseHeaderValues.ToArray();
 
-        public static void ShouldHaveHeader(this HttpResponseMessage response, string headerName, string headerValue)
-        {
-            var actualHeaderValue = GetRequiredHeader(response, headerName);
-            actualHeaderValue.Should().BeEquivalentTo(headerValue);
-        }
+        if (hasContentHeader) return contentHeaderValues.ToArray();
+        Assert.Fail($"Should have '{headerName}' header");
+        return null;
+    }
 
-        public static void ShouldNotHaveHeader(this HttpResponseMessage response, string headerName)
-        {
-            var hasResponseHeader = response.Headers.TryGetValues(headerName, out var _);
-            var hasContentHeader = response.Content.Headers.TryGetValues(headerName, out var _);
-            var hasHeader = hasResponseHeader || hasContentHeader;
+    public static void ShouldHaveHeader(this HttpResponseMessage response, string headerName, string headerValue)
+    {
+        var actualHeaderValue = GetRequiredHeader(response, headerName);
+        actualHeaderValue.Should().BeEquivalentTo(headerValue);
+    }
 
-            hasHeader.Should().BeFalse();
-        }
+    public static void ShouldNotHaveHeader(this HttpResponseMessage response, string headerName)
+    {
+        var hasResponseHeader = response.Headers.TryGetValues(headerName, out _);
+        var hasContentHeader = response.Content.Headers.TryGetValues(headerName, out _);
+        var hasHeader = hasResponseHeader || hasContentHeader;
 
-        public static byte[] ReadContentAsBytes(this HttpResponseMessage response)
-        {
-            var content = response.Content.ReadAsByteArrayAsync().Result;
-            return content;
-        }
+        hasHeader.Should().BeFalse();
+    }
 
-        public static JToken ReadContentAsJson(this HttpResponseMessage response)
-        {
-            var content = response.Content.ReadAsStringAsync().Result;
-            return JToken.Parse(content);
-        }
+    public static byte[] ReadContentAsBytes(this HttpResponseMessage response)
+    {
+        var content = response.Content.ReadAsByteArrayAsync().Result;
+        return content;
+    }
 
-        public static void ShouldHaveJsonContentEquivalentTo(this HttpResponseMessage response, object expected)
-        {
-            var content = response.ReadContentAsJson();
-            content.Should().BeEquivalentTo(JToken.FromObject(expected));
-        }
+    public static JToken ReadContentAsJson(this HttpResponseMessage response)
+    {
+        var content = response.Content.ReadAsStringAsync().Result;
+        return JToken.Parse(content);
+    }
 
-        public static XElement ReadContentAsXml(this HttpResponseMessage response)
-        {
-            var content = response.Content.ReadAsStringAsync().Result;
-            return XElement.Parse(content);
-        }
+    public static void ShouldHaveJsonContentEquivalentTo(this HttpResponseMessage response, object expected)
+    {
+        var content = response.ReadContentAsJson();
+        content.Should().BeEquivalentTo(JToken.FromObject(expected));
+    }
 
-        public static IEnumerable<string> ValuesOfElements(this XElement xElement, string localName)
-        {
-            return xElement.Elements()
-                .Where(e => e.Name.LocalName == localName)
-                .Select(e => e.Value);
-        }
+    public static XElement ReadContentAsXml(this HttpResponseMessage response)
+    {
+        var content = response.Content.ReadAsStringAsync().Result;
+        return XElement.Parse(content);
+    }
 
-        public static void ShouldHaveXmlContentEquivalentTo(this HttpResponseMessage response, string expectedXml)
-        {
-            var content = response.ReadContentAsXml();
-            var expected = XElement.Parse(expectedXml);
+    public static IEnumerable<string> ValuesOfElements(this XElement xElement, string localName)
+    {
+        return xElement.Elements()
+            .Where(e => e.Name.LocalName == localName)
+            .Select(e => e.Value);
+    }
 
-            XNode.DeepEquals(content, expected).Should().BeTrue();
-        }
+    public static void ShouldHaveXmlContentEquivalentTo(this HttpResponseMessage response, string expectedXml)
+    {
+        var content = response.ReadContentAsXml();
+        var expected = XElement.Parse(expectedXml);
 
-        public static ByteArrayContent SerializeToJsonContent(this object obj,
-            string contentType = "application/json")
-        {
-            string json = JsonConvert.SerializeObject(obj);
-            var bytes = Encoding.UTF8.GetBytes(json);
-            var content = new ByteArrayContent(bytes);
-            content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
-            return content;
-        }
+        XNode.DeepEquals(content, expected).Should().BeTrue();
+    }
 
-        public static void AddEmptyContent(this HttpRequestMessage request, string contentType)
-        {
-            request.Content = new ByteArrayContent(new byte[0]);
-            request.Content.Headers.Add("Content-Type", contentType);
-        }
+    public static ByteArrayContent SerializeToJsonContent(this object obj,
+        string contentType = "application/json")
+    {
+        var json = JsonConvert.SerializeObject(obj);
+        var bytes = Encoding.UTF8.GetBytes(json);
+        var content = new ByteArrayContent(bytes);
+        content.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        return content;
+    }
+
+    public static void AddEmptyContent(this HttpRequestMessage request, string contentType)
+    {
+        request.Content = new ByteArrayContent(new byte[0]);
+        request.Content.Headers.Add("Content-Type", contentType);
     }
 }

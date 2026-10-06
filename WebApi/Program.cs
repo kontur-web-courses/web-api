@@ -9,9 +9,10 @@ namespace WebApi
         {
             CreateHostBuilder(args).Build().Run();
         }
-        
-        private static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
+
+        private static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            return Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     // NOTE: Жесткий способ настройки, который сработает в 100% различных IDE.
@@ -22,5 +23,6 @@ namespace WebApi
 
                     webBuilder.UseStartup<Startup>();
                 });
+        }
     }
 }
