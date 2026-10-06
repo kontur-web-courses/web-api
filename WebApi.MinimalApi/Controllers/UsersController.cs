@@ -1,4 +1,6 @@
-﻿using AutoMapper;
+﻿using System.Xml.XPath;
+using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
@@ -39,29 +41,52 @@ public class UsersController : Controller
             ModelState.AddModelError("Login", "Invalid login");
             return UnprocessableEntity(ModelState);
         }
-        var user = mapper.Map<UserEntity>(userDto);
-        repository.Insert(user);
+        var user = repository.Insert(mapper.Map<UserEntity>(userDto));
         return CreatedAtRoute(
             nameof(GetUserById),
             new { userId  = user.Id },
             user.Id);
     }
     
-    [HttpPut]
-    public IActionResult UpdateUser([FromBody] UserCreateDto userDto)
+    [HttpPut("{userId}")]
+    [Produces("application/json", "application/xml")]
+
+    public IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] UserPutDto userDto)
     {
-        if (userDto == null)
+        if (userDto == null || userId == Guid.Empty)
             return BadRequest();
-        if (!ModelState.IsValid || !userDto.Login.All(char.IsLetterOrDigit))
+        if (!ModelState.IsValid)
         {
             ModelState.AddModelError("Login", "Invalid login");
             return UnprocessableEntity(ModelState);
         }
-        var user = mapper.Map<UserEntity>(userDto);
-        repository.Insert(user);
-        return CreatedAtRoute(
-            nameof(GetUserById),
-            new { userId  = user.Id },
-            user.Id);
+        var userEntity = repository.FindById(userId) ?? new UserEntity(userId);
+        var user = mapper.Map(userDto, userEntity);
+        repository.UpdateOrInsert(user, out var isInserted);
+        if (isInserted)
+            return CreatedAtRoute(
+                nameof(GetUserById),
+                new { userId = user.Id },
+                user.Id);
+        return NoContent();
+    }
+    
+    [HttpPatch("{userId}")]
+    [Produces("application/json", "application/xml")]
+    public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UserPutDto> patchDoc)
+    {
+        if (userId == Guid.Empty)
+            return BadRequest();
+        patchDoc.ApplyTo(UserPutDto, ModelState);
+        TryValidateModel(user);
+        var userEntity = repository.FindById(userId) ?? new UserEntity(userId);
+        var user = mapper.Map(userDto, userEntity);
+        repository.UpdateOrInsert(user, out var isInserted);
+        if (isInserted)
+            return CreatedAtRoute(
+                nameof(GetUserById),
+                new { userId = user.Id },
+                user.Id);
+        return NoContent();
     }
 }
