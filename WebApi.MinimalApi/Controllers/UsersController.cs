@@ -60,7 +60,7 @@ public class UsersController : Controller
     }
     
     [HttpPut("{userId}")]
-    public IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] UpdateDto? user)
+    public IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] UpdateUserDto? user)
     {
         if (userId == Guid.Empty)
             return BadRequest();
@@ -83,14 +83,14 @@ public class UsersController : Controller
     [HttpPatch("{userId}")]
     [Consumes("application/json-patch+json")]
     [Produces("application/json", "application/xml")]
-    public IActionResult PartiallyUpdateUser ([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UpdateDto>? patchDoc)
+    public IActionResult PartiallyUpdateUser ([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UpdateUserDto>? patchDoc)
     {
         if (patchDoc == null)
             return BadRequest();
         var user = _userRepository.FindById(userId);
         if (user == null)
             return NotFound();
-        var updateDto = new UpdateDto();
+        var updateDto = new UpdateUserDto();
         patchDoc.ApplyTo(updateDto, ModelState);
 
         if (!TryValidateModel(updateDto))
