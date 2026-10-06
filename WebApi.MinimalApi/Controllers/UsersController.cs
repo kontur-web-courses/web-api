@@ -18,7 +18,7 @@ public class UsersController : Controller
         this.mapper  = mapper;
     }
 
-    [HttpGet("{userId}")]
+    [HttpGet("{userId}", Name = nameof(GetUserById))]
     [Produces("application/json", "application/xml")]
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
@@ -29,19 +29,37 @@ public class UsersController : Controller
     }
 
     [HttpPost]
-    public IActionResult CreateUser([FromBody] object user)
+    [Produces("application/json", "application/xml")]
+    public IActionResult CreateUser([FromBody] NewUserDto? newUserDto)
     {
-        throw new NotImplementedException();
+        if (newUserDto == null)
+            return BadRequest();
+        
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+        
+        if (!CheckKeyIsValid(newUserDto.Login))
+        {
+            ModelState.AddModelError(nameof(NewUserDto.Login), "Логин должен состоять из цифр и букв");
+            return UnprocessableEntity(ModelState);
+        }
+        
+        var createdUserEntity = mapper.Map<NewUserDto, UserEntity>(newUserDto);
+        
+        return CreatedAtRoute(
+            nameof(GetUserById),
+            new { userId = createdUserEntity.Id },
+            createdUserEntity);
+
     }
 
-    private UserDto СonvertUserEntityToDto(UserEntity user)
+    private bool CheckKeyIsValid(string key)
     {
-        var userDto = new UserDto();
-        userDto.Id = user.Id;
-        userDto.Login = user.Login;
-        userDto.FullName = $"{user.FirstName} {user.LastName}";
-        userDto.GamesPlayed = user.GamesPlayed;
-        userDto.CurrentGameId = user.CurrentGameId;
-        return userDto;
+        foreach (var el in key)
+        {
+            if (!char.IsLetterOrDigit(el))
+                return false;
+        }
+        return true;
     }
 }
