@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <LangVersion>11</LangVersion>
+        <DocumentationFile>bin\Debug\net8.0\WebApi.MinimalApi.xml</DocumentationFile>
     </PropertyGroup>
     
     <ItemGroup>

@@ -38,7 +38,7 @@ public static class SwaggerExtensions
         });
     }
 
-    public static string GetSwaggerDocument(this IWebHost host, string documentName)
+    public static string GetSwaggerDocument(this IHost host, string documentName)
     {
         var sw = (ISwaggerProvider)host.Services.GetService(typeof(ISwaggerProvider));
         var doc = sw.GetSwagger(documentName);
