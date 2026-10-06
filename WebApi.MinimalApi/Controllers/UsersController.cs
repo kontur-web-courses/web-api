@@ -73,6 +73,17 @@ public class UsersController : ControllerBase
 
         return NoContent();
     }
+        
+    [HttpDelete("{userId}")]
+    public IActionResult DeleteUser([FromRoute] Guid userId)
+    {
+        if (_userRepository.FindById(userId) == null)
+            return NotFound();
+        
+        _userRepository.Delete(userId);
+        
+        return NoContent();
+    }
 
     [HttpGet(Name = nameof(GetUsers))]
     [Produces("application/json", "application/xml")]
