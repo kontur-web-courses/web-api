@@ -1,3 +1,5 @@
+using System.Xml.Serialization;
+
 namespace WebApi.MinimalApi.Domain;
 
 public class UserEntity
