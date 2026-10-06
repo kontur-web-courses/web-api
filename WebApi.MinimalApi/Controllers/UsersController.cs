@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using WebApi.MinimalApi.Domain;
@@ -56,6 +57,47 @@ public class UsersController : Controller
             nameof(GetUserById),
             new { userId = createdUserEntity.Id },
             createdUserEntity.Id);
+    }
+    
+    [HttpPut("{userId}")]
+    public IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] UpdateDto? user)
+    {
+        if (userId == Guid.Empty)
+            return BadRequest();
+        if (user is null)
+            return BadRequest();
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+        
+        var userEntity = _mapper.Map(user, new UserEntity(userId));
+        _userRepository.UpdateOrInsert(userEntity, out var isInserted);
+        if (isInserted)
+            return CreatedAtRoute(
+                nameof(GetUserById),
+                new { userId },
+                userId);
+        
+        return NoContent();
+    }
+    
+    [HttpPatch("{userId}")]
+    [Consumes("application/json-patch+json")]
+    [Produces("application/json", "application/xml")]
+    public IActionResult PartiallyUpdateUser ([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UpdateDto>? patchDoc)
+    {
+        if (patchDoc == null)
+            return BadRequest();
+        var user = _userRepository.FindById(userId);
+        if (user == null)
+            return NotFound();
+        var updateDto = new UpdateDto();
+        patchDoc.ApplyTo(updateDto, ModelState);
+
+        if (!TryValidateModel(updateDto))
+            return UnprocessableEntity(ModelState);
+        var userEntity = _mapper.Map(updateDto, new UserEntity(userId));
+        _userRepository.Update(userEntity);
+        return NoContent();
     }
 
     [HttpDelete("{userId}")]
