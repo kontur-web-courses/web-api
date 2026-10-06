@@ -7,14 +7,14 @@ using WebApi.MinimalApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.WebHost.UseUrls("https://localhost:5001;http://localhost:5000");
+
 builder.Services.AddControllers(options =>
     {
         options.OutputFormatters.Add(new XmlSerializerOutputFormatter());
         options.OutputFormatters.Insert(0, new 
             NewtonsoftJsonOutputFormatter(new JsonSerializerSettings
             {
-                ContractResolver = new 
-                    CamelCasePropertyNamesContractResolver()
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
             }, ArrayPool<char>.Shared, options));
         options.ReturnHttpNotAcceptable = true;
         options.RespectBrowserAcceptHeader = true;
@@ -22,6 +22,11 @@ builder.Services.AddControllers(options =>
     .ConfigureApiBehaviorOptions(options => {
         options.SuppressModelStateInvalidFilter = true;
         options.SuppressMapClientErrors = true;
+    })
+    .AddNewtonsoftJson(options =>
+    {
+        options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+        options.SerializerSettings.DefaultValueHandling = DefaultValueHandling.Populate;
     });
 
 builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
@@ -30,7 +35,9 @@ builder.Services.AddAutoMapper(cfg =>
 {
     cfg.CreateMap<UserEntity, UserDto>()
         .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.LastName} {src.FirstName}"));
+    cfg.CreateMap<UserCreateDto, UserEntity>();
 }, new System.Reflection.Assembly[0]);
+
 var app = builder.Build();
 
 app.MapControllers();
