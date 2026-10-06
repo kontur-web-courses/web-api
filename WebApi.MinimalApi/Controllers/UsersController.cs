@@ -1,8 +1,11 @@
-﻿using AutoMapper;
+using AutoMapper;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
+using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 
 namespace WebApi.MinimalApi.Controllers;
 
@@ -21,13 +24,17 @@ public class UsersController : ControllerBase
 
     [Produces("application/json", "application/xml")]
     [HttpGet("{userId:guid}", Name = nameof(GetUserById))]
+    [HttpHead("{userId}")]
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
         var user = _userRepository.FindById(userId);
         if (user == null)
             return NotFound();
 
-        return Ok(_mapper.Map<UserDto>(user));
+        if (!HttpMethods.IsHead(Request.Method)) return _mapper.Map<UserDto>(user);
+        
+        Response.ContentType = "application/json; charset=utf-8";
+        return Ok();
     }
 
     [HttpPost]
@@ -71,6 +78,36 @@ public class UsersController : ControllerBase
                 userEntity.Id);
         }
 
+        return NoContent();
+    }
+    
+    [HttpPatch("{userId}")]
+    public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UpdateUserDto> patchDoc)
+    {
+        if (patchDoc == null)
+            return BadRequest();
+        
+        var user = GetUserById(userId);
+        
+        if (user.Value is null) 
+            return NotFound();
+        
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+
+        var updateDto = new UpdateUserDto
+        {
+            Login = user.Value?.Login ?? "",
+            FirstName = user.Value?.FullName ?? ""
+        };
+        
+        patchDoc.ApplyTo(updateDto, ModelState);
+        
+        if (!ModelState.IsValid || !TryValidateModel(updateDto))
+            return UnprocessableEntity(ModelState);
+
+        UpdateUser(userId, updateDto);
+        
         return NoContent();
     }
         
