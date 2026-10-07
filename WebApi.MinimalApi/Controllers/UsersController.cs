@@ -11,11 +11,11 @@ public class UsersController : Controller
 {
     IUserRepository userRepository;
     IMapper mapper;
-    // Чтобы ASP.NET положил что-то в userRepository требуется конфигурация
+    
     public UsersController(IUserRepository userRepository, IMapper mapper)
     {
         this.userRepository = userRepository;
-        this.mapper  = mapper;
+        this.mapper = mapper;
     }
 
     [HttpGet("{userId}", Name = nameof(GetUserById))]
@@ -46,13 +46,39 @@ public class UsersController : Controller
         
         var createdUserEntity = mapper.Map<NewUserDto, UserEntity>(newUserDto);
         
-        userRepository.Insert(createdUserEntity);
+        var insertedUser = userRepository.Insert(createdUserEntity);
         
         return CreatedAtRoute(
             nameof(GetUserById),
-            new { userId = createdUserEntity.Id },
-            createdUserEntity);
+            new { userId = insertedUser.Id },
+            insertedUser.Id);
+    }
+    
+    [HttpPut("{userId}")]
+    [Produces("application/json", "application/xml")]
+    public IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] PutUserDto? putUserDto)
+    {
+        if (putUserDto == null || userId == Guid.Empty)
+            return BadRequest();
+        
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+        
+        var existingUser = userRepository.FindById(userId);
+        var userExistedBefore = existingUser != null;
 
+        var userEntity = new UserEntity(userId);;
+        userEntity = mapper.Map(putUserDto, userEntity);
+
+        userRepository.UpdateOrInsert(userEntity, out var isInserted);
+        
+        if (!userExistedBefore)
+            return CreatedAtRoute(
+                nameof(GetUserById),
+                new { userId = userEntity.Id },
+                userEntity.Id);
+        
+        return NoContent();
     }
 
     private bool CheckKeyIsValid(string key)
