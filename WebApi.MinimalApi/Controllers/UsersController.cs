@@ -126,6 +126,13 @@ public class UsersController : Controller
         return Ok(users);
     }
 
+    [HttpOptions]
+    public IActionResult GetUsersOptions()
+    {
+        Response.Headers.Append("Allow", "POST, GET, OPTIONS");
+        return Ok();
+    }
+
     private bool CheckKeyIsValid(string key)
     {
         foreach (var el in key)
