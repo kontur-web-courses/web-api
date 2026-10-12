@@ -138,6 +138,12 @@ namespace Tests
             response.ShouldHaveHeader("Content-Type", "application/json; charset=utf-8");
             var responseContent = response.ReadContentAsJson() as JObject;
             responseContent.Should().NotBeNull();
+            
+            var z = ("responseContent is null? " + (responseContent == null));
+            var y = ("responseContent.Type: " + responseContent?.Type);
+            var x = ("GetValue(\"login\") -> " + responseContent?.GetValue("login"));
+            var t = ("GetValue(\"login\").Type -> " + responseContent?.GetValue("login")?.Type);
+
             responseContent.GetValue("login").Should().NotBeNullOrEmpty();
         }
 
