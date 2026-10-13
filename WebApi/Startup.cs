@@ -18,7 +18,8 @@ namespace WebApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers()
-                .ConfigureApiBehaviorOptions(options => {
+                .ConfigureApiBehaviorOptions(options =>
+                {
                     options.SuppressModelStateInvalidFilter = true;
                     options.SuppressMapClientErrors = true;
                 });
@@ -33,10 +34,7 @@ namespace WebApi
 
             app.UseRouting();
             app.UseAuthorization();
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
         }
     }
 }

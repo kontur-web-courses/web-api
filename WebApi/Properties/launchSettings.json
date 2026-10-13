@@ -1,5 +1,5 @@
 {
-  "profiles": { 
+  "profiles": {
     "WebApi": {
       "commandName": "Project",
       "launchBrowser": true

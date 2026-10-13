@@ -1,7 +1,6 @@
-namespace Tests
+namespace Tests;
+
+public static class Configuration
 {
-    public static class Configuration
-    {
-        public static string BaseUrl => "http://localhost:5000";
-    }
+    public static string BaseUrl => "http://localhost:5000";
 }
