@@ -117,7 +117,7 @@ namespace Tests
             response.StatusCode.Should().Be(HttpStatusCode.Created);
             response.ShouldHaveHeader("Content-Type", "application/json; charset=utf-8");
 
-            var createdUserId = response.ReadContentAsJson().ToString();
+            var createdUserId = response.ReadContentAsJson()["id"].ToString();
             createdUserId.Should().NotBeNullOrEmpty();
             var createdUserUri = response.GetRequiredHeader("Location").SingleOrDefault();
             createdUserUri.Should().NotBeNullOrEmpty();
@@ -151,7 +151,7 @@ namespace Tests
             response.ShouldHaveHeader("Content-Type", "application/xml; charset=utf-8");
 
             var responseContent = response.ReadContentAsXml();
-            responseContent.Name.LocalName.Should().Be("guid");
+            responseContent.Name.LocalName.Should().Be("UserDto");
         }
 
         [Test]
