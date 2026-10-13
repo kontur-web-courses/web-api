@@ -14,9 +14,9 @@ public interface ISwaggerDescriptionsForUsersController
     [HttpGet("{userId}", Name = nameof(GetUserById))]
     [HttpHead("{userId}")]
     [Produces("application/json", "application/xml")]
-    [SwaggerResponse(200, "OK", typeof(UserDto))]
+    [SwaggerResponse(200, "OK", typeof(UserResponse))]
     [SwaggerResponse(404, "Пользователь не найден")]
-    ActionResult<UserDto> GetUserById([FromRoute] Guid userId);
+    ActionResult<UserResponse> GetUserById([FromRoute] Guid userId);
 
     /// <summary>
     /// Создать пользователя
@@ -88,7 +88,7 @@ public interface ISwaggerDescriptionsForUsersController
     /// <response code="200">OK</response>
     [HttpGet(Name = nameof(GetUsers))]
     [Produces("application/json", "application/xml")]
-    [ProducesResponseType(typeof(IEnumerable<UserDto>), 200)]
+    [ProducesResponseType(typeof(IEnumerable<UserResponse>), 200)]
     IActionResult GetUsers(int pageNumber, int pageSize);
 
     /// <summary>

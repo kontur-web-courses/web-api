@@ -1,6 +1,6 @@
 namespace WebApi.MinimalApi.Models;
 
-public class UserDto
+public class UserResponse
 { 
     public Guid Id { get; set; }
     public string Login { get; set; }
