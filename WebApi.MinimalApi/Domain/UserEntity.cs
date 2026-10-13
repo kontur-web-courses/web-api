@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace WebApi.MinimalApi.Domain;
 
 public class UserEntity
@@ -60,4 +62,19 @@ public class UserEntity
             CurrentGameId = null;
         }
     }
+}
+
+
+public record UpdateDto
+{
+    public Guid Id { get; set; }
+    [Required(AllowEmptyStrings = false)]
+    [RegularExpression("^[0-9\\p{L}]*$", ErrorMessage = "Login should contain only letters or digits")]
+    public string? Login { get; set; } = null;
+    [Required(AllowEmptyStrings = false)]
+    public string? LastName { get; set; }
+    [Required(AllowEmptyStrings = false)]
+    public string? FirstName { get; set; }
+    public int? GamesPlayed { get; set; } = null;
+    public Guid? CurrentGameId { get; set; } = null;
 }
