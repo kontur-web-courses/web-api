@@ -1,4 +1,5 @@
 using NUnitLite;
+using WebApi.MinimalApi.Domain;
 
 namespace Tests
 {
