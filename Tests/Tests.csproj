@@ -6,7 +6,6 @@
     <IsPackable>false</IsPackable>
 
     <StartupObject>Tests.Program</StartupObject>
-
     <LangVersion>11</LangVersion>
   </PropertyGroup>
 
