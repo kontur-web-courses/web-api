@@ -13,6 +13,8 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.CreateMap<UserEntity, UserDto>()
         .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.LastName + " " + src.FirstName));
     cfg.CreateMap<UserCreateDto, UserEntity>();
+    cfg.CreateMap<UserPutDto, UserEntity>();
+    cfg.CreateMap<UserEntity, UserPutDto>();
 }, new Assembly[0]);
 builder.WebHost.UseUrls("http://localhost:5000");
 
