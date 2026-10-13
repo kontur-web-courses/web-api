@@ -81,7 +81,7 @@ public class InMemoryUserRepository : IUserRepository
         var count = entities.Count;
         var items = entities.Values
             .OrderBy(u => u.Login)
-            .Skip((pageNumber - 1) * pageSize)
+            .Skip((int)Math.Min((long)(pageNumber - 1) * pageSize, int.MaxValue))
             .Take(pageSize)
             .Select(u => Clone(u.Id, u))
             .ToList();

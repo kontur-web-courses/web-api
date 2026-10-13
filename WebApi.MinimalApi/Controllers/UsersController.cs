@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
 
@@ -10,6 +11,10 @@ namespace WebApi.MinimalApi.Controllers;
 [ApiController]
 public class UsersController : Controller
 {
+    private const int MinPageNumber = 1;
+    private const int MinPageSize = 1;
+    private const int MaxPageSize = 20;
+
     // Чтобы ASP.NET положил что-то в userRepository требуется конфигурация
     private readonly IUserRepository userRepository;
     private readonly IMapper mapper;
@@ -124,6 +129,36 @@ public class UsersController : Controller
         mapper.Map(userUpdateDto, currentUser);
         userRepository.Update(currentUser);
         return NoContent();
+    }
+
+    [HttpGet(Name = nameof(GetUsers))]
+    [Produces("application/json", "application/xml")]
+    public ActionResult<IEnumerable<UserDto>> GetUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        pageNumber = Math.Max(MinPageNumber, pageNumber);
+        pageSize = Math.Clamp(pageSize, MinPageSize, MaxPageSize);
+
+        var page = userRepository.GetPage(pageNumber, pageSize);
+        var previousPageNumber = Math.Max(MinPageNumber, Math.Min(pageNumber - 1, page.TotalPages));
+        var pagination = new
+        {
+            previousPageLink = page.HasPrevious
+                ? Url.Link(nameof(GetUsers), new { pageNumber = previousPageNumber, pageSize })
+                : null,
+            nextPageLink = page.HasNext
+                ? Url.Link(nameof(GetUsers), new { pageNumber = pageNumber + 1, pageSize })
+                : null,
+            totalCount = page.TotalCount,
+            pageSize = page.PageSize,
+            currentPage = page.CurrentPage,
+            totalPages = page.TotalPages
+        };
+        Response.Headers["X-Pagination"] = JsonConvert.SerializeObject(pagination);
+
+        return Ok(mapper.Map<IEnumerable<UserDto>>(page));
     }
 
     [HttpOptions]
