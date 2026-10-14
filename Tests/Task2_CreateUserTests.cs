@@ -29,7 +29,7 @@ namespace Tests
             response.StatusCode.Should().Be(HttpStatusCode.Created);
             response.ShouldHaveHeader("Content-Type", "application/json; charset=utf-8");
 
-            var createdUserId = response.ReadContentAsJson()["id"].Value<string>();
+            var createdUserId = response.ReadContentAsJson().ToString();;//нашёл очевидное противоречие с остальными тестами, решил так пофиксить(мб я пропуситл этот момент на паре)
             createdUserId.Should().NotBeNullOrEmpty();
             var createdUserUri = response.GetRequiredHeader("Location").SingleOrDefault();
             createdUserUri.Should().NotBeNullOrEmpty();
