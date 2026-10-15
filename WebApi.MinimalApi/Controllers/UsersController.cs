@@ -141,4 +141,12 @@ public class UsersController : Controller
 
         return Ok(users);
     }
+
+    [HttpOptions]
+    [Produces("application/json", "application/xml")]
+    public IActionResult GetOptions()
+    {
+        Response.Headers.Add("Allow", "GET,OPTIONS,POST");
+        return Ok();
+    }
 }
