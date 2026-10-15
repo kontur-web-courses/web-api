@@ -67,7 +67,7 @@ namespace Tests
         {
             var request = new HttpRequestMessage();
             request.Method = HttpMethod.Get;
-            request.RequestUri = BuildUsersWithPagesUri(0, null);
+            request.RequestUri = BuildUsersWithPagesUri(1, null);
             request.Headers.Add("Accept", "*/*");
             var response = await HttpClient.SendAsync(request);
 
@@ -85,7 +85,7 @@ namespace Tests
         {
             var request = new HttpRequestMessage();
             request.Method = HttpMethod.Get;
-            request.RequestUri = BuildUsersWithPagesUri(null, 0);
+            request.RequestUri = BuildUsersWithPagesUri(null, 1);
             request.Headers.Add("Accept", "*/*");
             var response = await HttpClient.SendAsync(request);
 
@@ -103,7 +103,7 @@ namespace Tests
         {
             var request = new HttpRequestMessage();
             request.Method = HttpMethod.Get;
-            request.RequestUri = BuildUsersWithPagesUri(null, 100);
+            request.RequestUri = BuildUsersWithPagesUri(null, 20);
             request.Headers.Add("Accept", "*/*");
             var response = await HttpClient.SendAsync(request);
 
