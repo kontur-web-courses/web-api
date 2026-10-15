@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
 
@@ -10,14 +11,15 @@ namespace WebApi.MinimalApi.Controllers;
 [ApiController]
 public class UsersController : Controller
 {
-    
     private readonly IUserRepository userRepository;
     private readonly IMapper mapper;
-    
-    public UsersController(IUserRepository userRepository, IMapper mapper)
+    private readonly LinkGenerator linkGenerator;
+
+    public UsersController(IUserRepository userRepository, IMapper mapper, LinkGenerator linkGenerator)
     {
         this.userRepository = userRepository;
         this.mapper = mapper;
+        this.linkGenerator = linkGenerator;
     }
 
     [HttpHead("{userId}")]
@@ -28,13 +30,13 @@ public class UsersController : Controller
         var user = userRepository.FindById(userId);
         if (user == null)
             return NotFound();
-        
+
         if (HttpMethods.IsHead(Request.Method))
         {
             Response.ContentType = "application/json; charset=utf-8";
             return Ok();
         }
-        
+
         return Ok(mapper.Map<UserDto>(user));
     }
 
@@ -77,7 +79,7 @@ public class UsersController : Controller
         if (patchDocument == null)
             return BadRequest();
         var entity = userRepository.FindById(userId);
-        if (entity == null) 
+        if (entity == null)
             return NotFound();
         var updateDto = mapper.Map<UpdateUserDto>(entity);
         patchDocument.ApplyTo(updateDto, ModelState);
@@ -96,8 +98,47 @@ public class UsersController : Controller
         var userEntity = userRepository.FindById(userId);
         if (userEntity == null)
             return NotFound();
-        
+
         userRepository.Delete(userId);
         return NoContent();
+    }
+
+
+    [HttpGet("", Name = nameof(GetUsersPaginationDto))]
+    [Produces("application/json", "application/xml")]
+    public IActionResult GetAllUsers([FromQuery] GetUsersPaginationDto paginationDto)
+    {
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+
+        var pageList = userRepository.GetPage(paginationDto.PageNumber, paginationDto.PageSize);
+        var users = mapper.Map<IEnumerable<UserDto>>(pageList);
+
+        var previousPageLink = linkGenerator.GetUriByRouteValues(HttpContext, nameof(GetUsersPaginationDto),
+            new GetUsersPaginationDto
+            {
+                PageNumber = paginationDto.PageNumber - 1,
+                PageSize = paginationDto.PageSize
+            });
+
+        var nextPageLink = linkGenerator.GetUriByRouteValues(HttpContext, nameof(GetUsersPaginationDto),
+            new GetUsersPaginationDto
+            {
+                PageNumber = paginationDto.PageNumber + 1,
+                PageSize = paginationDto.PageSize
+            });
+
+        var paginationHeader = new
+        {
+            previousPageLink = pageList.HasPrevious ? previousPageLink : null,
+            nextPageLink = pageList.HasNext ? nextPageLink : null,
+            totalCount = pageList.TotalCount,
+            pageSize = pageList.PageSize,
+            currentPage = pageList.CurrentPage,
+            totalPages = pageList.TotalPages
+        };
+        Response.Headers.Add("X-Pagination", JsonConvert.SerializeObject(paginationHeader));
+
+        return Ok(users);
     }
 }
