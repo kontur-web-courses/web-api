@@ -71,12 +71,12 @@ public class UsersController : Controller
         var entity = userRepository.FindById(userId);
         if (entity == null) 
             return NotFound();
-        var dto = mapper.Map<UpdateUserDto>(entity);
-        patchDocument.ApplyTo(dto, ModelState);
-        TryValidateModel(dto);
+        var updateDto = mapper.Map<UpdateUserDto>(entity);
+        patchDocument.ApplyTo(updateDto, ModelState);
+        TryValidateModel(updateDto);
         if (!ModelState.IsValid)
             return UnprocessableEntity(ModelState);
-        mapper.Map(dto, entity);
+        mapper.Map(updateDto, entity);
         userRepository.Update(entity);
         return NoContent();
     }
