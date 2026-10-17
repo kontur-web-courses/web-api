@@ -1,3 +1,4 @@
+using System;
 using FluentAssertions;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
@@ -25,7 +26,6 @@ namespace Tests
                 lastName = "Jackson"
             }.SerializeToJsonContent();
             var response = await HttpClient.SendAsync(request);
-
             response.StatusCode.Should().Be(HttpStatusCode.Created);
             response.ShouldHaveHeader("Content-Type", "application/json; charset=utf-8");
 
@@ -151,7 +151,7 @@ namespace Tests
             response.ShouldHaveHeader("Content-Type", "application/xml; charset=utf-8");
 
             var responseContent = response.ReadContentAsXml();
-            responseContent.Name.LocalName.Should().Be("guid");
+            responseContent.Name.LocalName.Should().Be("UserDto");
         }
 
         [Test]

@@ -19,7 +19,6 @@ namespace Tests
             {
                 login = "anonymous"
             });
-
             var request = new HttpRequestMessage();
             request.Method = HttpMethod.Put;
             request.RequestUri = BuildUsersByIdUri(createdUserId);
@@ -31,7 +30,7 @@ namespace Tests
                 lastName = "V"
             }.SerializeToJsonContent();
             var response = await HttpClient.SendAsync(request);
-
+            Console.WriteLine(response);
             response.StatusCode.Should().Be(HttpStatusCode.NoContent);
             response.ShouldNotHaveHeader("Content-Type");
 
