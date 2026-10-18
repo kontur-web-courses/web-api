@@ -1,4 +1,3 @@
-using System.Buffers;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Newtonsoft.Json;
@@ -26,12 +25,6 @@ builder.Services.AddAutoMapper(cfg =>
 builder.Services.AddControllers(options =>
     {
         options.OutputFormatters.Add(new XmlSerializerOutputFormatter());
-        options.OutputFormatters.Insert(0, new 
-            NewtonsoftJsonOutputFormatter(new JsonSerializerSettings
-            {
-                ContractResolver = new 
-                    CamelCasePropertyNamesContractResolver()
-            }, ArrayPool<char>.Shared, options));
         options.ReturnHttpNotAcceptable = true;
         options.RespectBrowserAcceptHeader = true;
     })
