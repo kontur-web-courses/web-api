@@ -151,7 +151,7 @@ namespace Tests
             response.ShouldHaveHeader("Content-Type", "application/xml; charset=utf-8");
 
             var responseContent = response.ReadContentAsXml();
-            responseContent.Name.LocalName.Should().Be("guid");
+            responseContent.Name.LocalName.Should().Be("UserDto");
         }
 
         [Test]

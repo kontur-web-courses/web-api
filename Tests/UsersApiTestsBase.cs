@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 
 namespace Tests
@@ -91,7 +92,7 @@ namespace Tests
             response.StatusCode.Should().Be(HttpStatusCode.Created);
             response.ShouldHaveHeader("Content-Type", "application/json; charset=utf-8");
 
-            var createdUserId = response.ReadContentAsJson().ToString();
+            var createdUserId = response.ReadContentAsJson()["id"].Value<string>();
             createdUserId.Should().NotBeNullOrEmpty();
             return createdUserId;
         }
