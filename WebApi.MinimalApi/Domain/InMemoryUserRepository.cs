@@ -55,6 +55,7 @@ public class InMemoryUserRepository : IUserRepository
 
     public void UpdateOrInsert(UserEntity user, out bool isInserted)
     {
+        var e = Guid.Empty;
         if (user.Id == Guid.Empty)
             throw new InvalidOperationException();
 
