@@ -91,7 +91,8 @@ namespace Tests
             response.StatusCode.Should().Be(HttpStatusCode.Created);
             response.ShouldHaveHeader("Content-Type", "application/json; charset=utf-8");
 
-            var createdUserId = response.ReadContentAsJson().ToString();
+            var json = response.ReadContentAsJson();
+            var createdUserId = json["id"]?.ToString() ?? json.ToString();
             createdUserId.Should().NotBeNullOrEmpty();
             return createdUserId;
         }
