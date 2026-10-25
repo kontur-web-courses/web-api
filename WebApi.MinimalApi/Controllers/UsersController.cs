@@ -70,7 +70,7 @@ public class  UsersController : Controller
     
     [Produces("application/json", "application/xml")]
     [HttpPost(Name = nameof(CreateUser))]
-    public IActionResult CreateUser([FromBody] UserCreateDto? user)
+    public IActionResult CreateUser([FromBody] UserCreateDto user)
     {
         if (user == null)
             return BadRequest();
@@ -80,18 +80,15 @@ public class  UsersController : Controller
         
         var createdUserEntity = userRepository.Insert(mapper.Map<UserEntity>(user));
 
-        var responseBody = Request.Headers.Accept.Any(h => h != null && h.Contains("xml"))
-            ? (object)createdUserEntity.Id
-            : new { id = createdUserEntity.Id };
         return CreatedAtRoute(
             nameof(GetUserById),
             new { userId = createdUserEntity.Id },
-            responseBody);
+            new CreatedUserResponse { Id = createdUserEntity.Id });
     }
 
     [Produces("application/json", "application/xml")]
-    [HttpPut(nameof(CreateUser)), Route("{userId}")]
-    public IActionResult CreateUser([FromRoute] Guid userId, [FromBody] UserUpdateDto? user)
+    [HttpPut("{userId}")]
+    public IActionResult UpdateUser([FromRoute] Guid userId, [FromBody] UserUpdateDto user)
     {
         if (user == null || userId == Guid.Empty)
             return BadRequest();
@@ -117,7 +114,7 @@ public class  UsersController : Controller
     [Produces("application/json", "application/xml")]
     [HttpPatch("{userId}")]
     public IActionResult PartiallyUpdateUser(
-        [FromRoute] Guid userId, [FromBody] JsonPatchDocument<UserUpdateDto>? patchDoc
+        [FromRoute] Guid userId, [FromBody] JsonPatchDocument<UserUpdateDto> patchDoc
 
     )
     {

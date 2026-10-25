@@ -15,3 +15,9 @@ public class UserCreateDto
     [DefaultValue("Doe")]
     public string? LastName { get; set; } = "Doe";
 }
+
+[System.Xml.Serialization.XmlRoot("guid")]
+public class CreatedUserResponse
+{
+    public Guid Id { get; set; }
+}
