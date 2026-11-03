@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
 
@@ -100,6 +101,40 @@ public class UsersController : Controller
         mapper.Map(user, userEntity);
         userRepository.Update(userEntity);
         return NoContent();
+    }
+
+    [HttpGet]
+    [Produces("application/json")]
+    public ActionResult<IEnumerable<UserDto>> GetUsers([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    {
+        pageNumber = Math.Max(1, pageNumber);
+        pageSize = Math.Clamp(pageSize, 1, 20);
+
+        var usersPage = userRepository.GetPage(pageNumber, pageSize);
+        var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.Path}";
+        string? BuildPageLink(int page) =>
+            $"{baseUrl}?pageNumber={page}&pageSize={pageSize}";
+
+        var pagination = new
+        {
+            previousPageLink = usersPage.HasPrevious ? BuildPageLink(pageNumber - 1) : null,
+            nextPageLink = usersPage.HasNext ? BuildPageLink(pageNumber + 1) : null,
+            totalCount = usersPage.TotalCount,
+            pageSize = usersPage.PageSize,
+            currentPage = usersPage.CurrentPage,
+            totalPages = usersPage.TotalPages
+        };
+
+        Response.Headers["X-Pagination"] = JsonSerializer.Serialize(pagination);
+        Response.ContentType = "application/json; charset=utf-8";
+        return Ok(mapper.Map<IEnumerable<UserDto>>(usersPage));
+    }
+
+    [HttpOptions]
+    public IActionResult GetUsersOptions()
+    {
+        Response.Headers["Allow"] = "POST, GET, OPTIONS";
+        return Ok();
     }
 
     [HttpDelete("{userId}")]
