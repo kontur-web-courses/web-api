@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.MinimalApi.Domain;
 using WebApi.MinimalApi.Models;
@@ -19,12 +20,19 @@ public class UsersController : Controller
     }
 
     [HttpGet("{userId}", Name = nameof(GetUserById))]
+    [HttpHead("{userId}")]
     [Produces("application/json", "application/xml")]
     public ActionResult<UserDto> GetUserById([FromRoute] Guid userId)
     {
         var user = userRepository.FindById(userId);
         if (user == null)
             return NotFound();
+
+        if (HttpMethods.IsHead(Request.Method))
+        {
+            Response.ContentType = "application/json; charset=utf-8";
+            return Ok();
+        }
 
         return Ok(mapper.Map<UserDto>(user));
     }
@@ -69,5 +77,39 @@ public class UsersController : Controller
             nameof(GetUserById),
             new { userId = userEntity.Id },
             userEntity.Id);
+    }
+
+    [HttpPatch("{userId}")]
+    [Produces("application/json", "application/xml")]
+    public IActionResult PartiallyUpdateUser([FromRoute] Guid userId, [FromBody] JsonPatchDocument<UpdateUserDto> patchDoc)
+    {
+        if (patchDoc == null)
+            return BadRequest();
+
+        var userEntity = userRepository.FindById(userId);
+        if (userEntity == null)
+            return NotFound();
+
+        var user = mapper.Map<UpdateUserDto>(userEntity);
+        patchDoc.ApplyTo(user, ModelState);
+        TryValidateModel(user);
+
+        if (!ModelState.IsValid)
+            return UnprocessableEntity(ModelState);
+
+        mapper.Map(user, userEntity);
+        userRepository.Update(userEntity);
+        return NoContent();
+    }
+
+    [HttpDelete("{userId}")]
+    public IActionResult DeleteUser([FromRoute] Guid userId)
+    {
+        var user = userRepository.FindById(userId);
+        if (user == null)
+            return NotFound();
+
+        userRepository.Delete(userId);
+        return NoContent();
     }
 }
