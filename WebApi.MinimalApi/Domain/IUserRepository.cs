@@ -9,4 +9,5 @@ public interface IUserRepository
     void UpdateOrInsert(UserEntity user, out bool isInserted);
     void Delete(Guid id);
     PageList<UserEntity> GetPage(int pageNumber, int pageSize);
+    int GetTotalCount();
 }
