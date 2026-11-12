@@ -1,3 +1,5 @@
+using WebApi.MinimalApi.Models;
+
 namespace WebApi.MinimalApi.Domain;
 
 public class UserEntity

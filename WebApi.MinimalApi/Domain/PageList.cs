@@ -2,6 +2,9 @@ namespace WebApi.MinimalApi.Domain;
 
 public class PageList<T> : List<T>
 {
+    public const int MinPageSize = 1;
+    public const int MaxPageSize = 20;
+    
     public int CurrentPage { get; }
     public int TotalPages { get; }
     public int PageSize { get; }
