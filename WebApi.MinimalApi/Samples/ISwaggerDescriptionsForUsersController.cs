@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using Swashbuckle.Swagger.Annotations;
+using Swashbuckle.AspNetCore.Annotations;
 using WebApi.MinimalApi.Models;
 
 namespace WebApi.MinimalApi.Samples;
