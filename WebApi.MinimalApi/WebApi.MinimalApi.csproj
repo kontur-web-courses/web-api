@@ -5,10 +5,11 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <LangVersion>11</LangVersion>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
     
     <ItemGroup>
-      <InternalsVisibleTo Include="Tests"/>
+      <InternalsVisibleTo Include="Tests" />
     </ItemGroup>
 
     <ItemGroup>
